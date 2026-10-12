@@ -1,22 +1,23 @@
-package com.cedacri.internship.entities;
+package com.cedacri.internship.entities.user;
 
 import com.cedacri.internship.edums.Gender;
+import com.cedacri.internship.entities.AbstractAuditable;
+import com.cedacri.internship.entities.Address;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.io.Serializable;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "persons")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-@ToString(onlyExplicitlyIncluded = true)   // personal data (PII) stays out of logs
-public class Person implements Serializable {
+@ToString(onlyExplicitlyIncluded = true)
+public class Person extends AbstractAuditable implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,43 +25,31 @@ public class Person implements Serializable {
     @Setter(AccessLevel.NONE)
     private Long id;
 
-    @NotBlank
-    @Size(max = 45)
+    @ToString.Include
     @Column(nullable = false, length = 45)
     private String firstName;
 
-    @NotBlank
-    @Size(max = 45)
+    @ToString.Include
     @Column(nullable = false, length = 45)
     private String lastName;
 
-    /**
-     * National ID (e.g. CNP / IDNP): 13 digits, kept as text so leading zeros survive.
-     */
-    @Pattern(regexp = "\\d{13}", message = "must contain exactly 13 digits")
     @Column(unique = true, length = 13)
     private String socialId;
 
-    @Past
+    @Column(nullable = false)
     private LocalDate dateOfBirth;
 
-    @Enumerated(EnumType.STRING)
     @Column(length = 10)
+    @Enumerated(EnumType.STRING)
     private Gender gender;
 
-    @NotNull
     @OneToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "address_id", nullable = false, unique = true)
+    @JoinColumn(nullable = false, unique = true)
     private Address address;
 
-    /**
-     * E.164-style: optional +, 7–15 digits.
-     */
-    @Pattern(regexp = "\\+?\\d{7,15}", message = "must be a valid phone number")
     @Column(length = 16)
     private String phoneNumber;
 
-    @Email
     @Size(max = 254)
     @Column(unique = true, length = 254)
     private String email;
@@ -70,10 +59,5 @@ public class Person implements Serializable {
         if (this == o) return true;
         if (!(o instanceof Person other)) return false;
         return id != null && id.equals(other.getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return Person.class.hashCode();
     }
 }
