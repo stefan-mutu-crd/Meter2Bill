@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="jakarta.faces.html"
+      xmlns:f="jakarta.faces.core"
+      xmlns:p="primefaces">
+<f:metadata>
+    <f:viewAction action="#{loginBean.checkMessages}"/>
+</f:metadata>
+<h:head><title>Login</title></h:head>
+<h:body>
+    <p:card style="width: 350px; margin: 80px auto;">
+        <f:facet name="title">Login</f:facet>
+
+        <p:messages showDetail="true" closable="true"/>
+
+        <!-- Plain form: posted straight to Spring Security -->
+        <form action="login" method="post">
+            <label for="username">Username</label><br/>
+            <input type="text" id="username" name="username"
+                   class="ui-inputfield ui-inputtext ui-widget ui-state-default ui-corner-all"
+                   style="width:100%"/>
+
+            <label for="password">Password</label><br/>
+            <input type="password" id="password" name="password"
+                   class="ui-inputfield ui-password ui-widget ui-state-default ui-corner-all"
+                   style="width:100%"/>
+
+            <button type="submit" class="ui-button ui-widget ui-state-default ui-corner-all"
+                    style="width:100%; padding:.5rem;">Sign in</button>
+        </form>
+    </p:card>
+</h:body>
+</html>

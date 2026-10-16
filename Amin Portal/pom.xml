@@ -17,14 +17,24 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+    <dependencyManagement>
+        <dependencies>
+            <!-- Source: https://mvnrepository.com/artifact/org.joinfaces/joinfaces-platform -->
+            <dependency>
+                <groupId>org.joinfaces</groupId>
+                <artifactId>joinfaces-platform</artifactId>
+                <version>6.1.1</version>
+                <type>pom</type>
+                <scope>compile</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
-        <!-- Source: https://mvnrepository.com/artifact/org.joinfaces/joinfaces-platform -->
+
         <dependency>
-            <groupId>org.joinfaces</groupId>
-            <artifactId>joinfaces-platform</artifactId>
-            <version>6.1.1</version>
-            <type>pom</type>
-            <scope>compile</scope>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <!-- Source: https://mvnrepository.com/artifact/org.joinfaces/primefaces-spring-boot-starter -->
         <dependency>
@@ -65,7 +75,8 @@
         </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-database-postgresql</artifactId>   <!-- match your DB: flyway-mysql, flyway-sqlserver, ... -->
+            <artifactId>flyway-database-postgresql
+            </artifactId>   <!-- match your DB: flyway-mysql, flyway-sqlserver, ... -->
         </dependency>
     </dependencies>
 </project>
