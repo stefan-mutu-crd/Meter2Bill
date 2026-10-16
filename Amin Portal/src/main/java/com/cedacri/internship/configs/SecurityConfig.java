@@ -1,16 +1,45 @@
 package com.cedacri.internship.configs;
 
+import com.cedacri.internship.entities.user.AdminUser;
+import com.cedacri.internship.services.AdminUserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 public class SecurityConfig {
     @Bean
     SecurityFilterChain open(HttpSecurity http) throws Exception {
-        http.authorizeHttpRequests(a -> a.anyRequest().permitAll())
-                .csrf(c -> c.disable());   // otherwise PrimeFaces ajax POSTs get 403
+        http.csrf(AbstractHttpConfigurer::disable)
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/login.xhtml",
+                                "/jakarta.faces.resource/**",
+                                "/resources/**"
+                        ).permitAll()
+                        .anyRequest().authenticated());
         return http.build();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService(AdminUserService service) {
+        return (username -> {
+            AdminUser adminUser = service.findByUsername(username);
+            return User.withUsername(username)
+                    .password(adminUser.getPassword())
+                    .roles(String.valueOf(adminUser.getRole()))
+                    .build();
+        });
     }
 }

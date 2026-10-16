@@ -1,8 +1,8 @@
 package com.cedacri.internship.entities.user;
 
 import com.cedacri.internship.edums.AdminUserRole;
+
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 import java.io.Serializable;
@@ -21,13 +21,12 @@ public class AdminUser extends BaseUser implements Serializable {
     @Setter(AccessLevel.NONE)
     private Long id;
 
-    @NotBlank
     @Column(nullable = false)
     private String fullName;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private AdminUserRole adminRole;
+    private AdminUserRole role;
 
     @Override
     public boolean equals(Object o) {

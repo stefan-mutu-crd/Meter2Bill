@@ -2,6 +2,7 @@ package com.cedacri.internship.services;
 
 import com.cedacri.internship.dtos.BaseSearchDto;
 import com.cedacri.internship.repositories.specification.BaseRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,8 +24,14 @@ public abstract class BaseAbstractService<T, ID> {
 
     public T findById(ID id) {
         return baseRepository.findById(id).orElseThrow(()
-                -> new jakarta.persistence.EntityNotFoundException(
+                -> new EntityNotFoundException(
                 entityClass.getSimpleName() + " not found with id: " + id));
+    }
+
+    public T searchOne(BaseSearchDto searchDto) {
+        return baseRepository.searchOptional(searchDto.toCriteria())
+                .orElseThrow(()
+                        -> new EntityNotFoundException(entityClass.getSimpleName() + " not found"));
     }
 
     public List<T> search(BaseSearchDto searchDto) {
