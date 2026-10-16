@@ -1,0 +1,17 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:f="jakarta.faces.core"
+                xmlns:h="jakarta.faces.html"
+                xmlns:p="primefaces">
+
+    <p:menubar hideDelay="1000">
+        <f:facet name="start">
+            <p:graphicImage name="images/logo.png" height="25px"/>
+        </f:facet>
+        <p:submenu label="Users" icon="pi pi-fw pi-user">
+            <p:menuitem value="Employee"/>
+            <p:menuitem value="Customers"/>
+        </p:submenu>
+    </p:menubar>
+
+</ui:composition>

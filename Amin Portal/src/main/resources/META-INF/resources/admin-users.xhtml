@@ -1,0 +1,137 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:p="primefaces"
+                template="/templates/layout.xhtml">
+
+    <ui:define name="title">Admin - Users</ui:define>
+
+    <ui:define name="content">
+        <h:form id="usersForm">
+
+            <!-- ================= FILTER ================= -->
+            <p:panel header="Filter">
+                <p:panelGrid columns="4" layout="grid">
+                    <p:outputLabel for="username" value="Username"/>
+                    <p:inputText id="username" value="#{adminUsersBean.filter.username}"/>
+
+                    <p:outputLabel for="fullName" value="Full name"/>
+                    <p:inputText id="fullName" value="#{adminUsersBean.filter.fullName}"/>
+
+                    <p:outputLabel for="role" value="Role"/>
+                    <p:selectOneMenu id="role" value="#{adminUsersBean.filter.role}">
+                        <f:selectItem itemLabel="All" itemValue="#{null}" noSelectionOption="true"/>
+                        <f:selectItems value="#{adminUsersBean.roles}" var="r"
+                                       itemLabel="#{r}" itemValue="#{r}"/>
+                    </p:selectOneMenu>
+
+                    <p:outputLabel for="active" value="Active"/>
+                    <p:selectOneMenu id="active" value="#{adminUsersBean.filter .enabled}">
+                        <f:selectItem itemLabel="All" itemValue="#{null}" noSelectionOption="true"/>
+                        <f:selectItem itemLabel="Yes" itemValue="#{true}"/>
+                        <f:selectItem itemLabel="No" itemValue="#{false}"/>
+                    </p:selectOneMenu>
+                </p:panelGrid>
+
+                <f:facet name="footer">
+                    <p:commandButton value="Search" icon="pi pi-search"
+                                     action="#{adminUsersBean.search}"
+                                     process="@this username fullName role active"
+                                     update="results"/>
+                    <p:commandButton value="Reset" icon="pi pi-times"
+                                     styleClass="ui-button-secondary"
+                                     action="#{adminUsersBean.reset}"
+                                     process="@this"
+                                     update="@form"/>
+                </f:facet>
+            </p:panel>
+
+            <!-- ================= LIST + PAGINATION ================= -->
+            <p:outputPanel id="results">
+
+                <p:dataTable id="usersTable"
+                             value="#{adminUsersBean.result.content}" var="u"
+                             emptyMessage="No users found">
+
+                    <p:column>
+                        <f:facet name="header">
+                            <p:commandButton value="Username" styleClass="ui-button-flat"
+                                             icon="#{adminUsersBean.sortIcon('username')}" iconPos="right"
+                                             action="#{adminUsersBean.sortBy('username')}"
+                                             process="@this" update="usersForm:results"/>
+                        </f:facet>
+                        <h:outputText value="#{u.username}"/>
+                    </p:column>
+
+                    <p:column>
+                        <f:facet name="header">
+                            <p:commandButton value="Full name" styleClass="ui-button-flat"
+                                             icon="#{adminUsersBean.sortIcon('fullName')}" iconPos="right"
+                                             action="#{adminUsersBean.sortBy('fullName')}"
+                                             process="@this" update="usersForm:results"/>
+                        </f:facet>
+                        <h:outputText value="#{u.fullName}"/>
+                    </p:column>
+
+                    <p:column>
+                        <f:facet name="header">
+                            <p:commandButton value="Role" styleClass="ui-button-flat"
+                                             icon="#{adminUsersBean.sortIcon('role')}" iconPos="right"
+                                             action="#{adminUsersBean.sortBy('role')}"
+                                             process="@this" update="usersForm:results"/>
+                        </f:facet>
+                        <h:outputText value="#{u.role}"/>
+                    </p:column>
+
+                    <p:column>
+                        <f:facet name="header">
+                            <p:commandButton value="Active" styleClass="ui-button-flat"
+                                             icon="#{adminUsersBean.sortIcon('active')}" iconPos="right"
+                                             action="#{adminUsersBean.sortBy('active')}"
+                                             process="@this" update="usersForm:results"/>
+                        </f:facet>
+                        <p:tag value="#{u .enabled ? 'Active' : 'Inactive'}"
+                               severity="#{u .enabled ? 'success' : 'danger'}"/>
+                    </p:column>
+                </p:dataTable>
+
+                <!-- pagination bar -->
+                <p:toolbar>
+                    <p:toolbarGroup align="left">
+                        <h:outputText
+                                value="Page #{adminUsersBean.result.number + 1} of #{adminUsersBean.lastPage + 1} (#{adminUsersBean.result.totalElements} users)"/>
+                    </p:toolbarGroup>
+
+                    <p:toolbarGroup align="right">
+                        <p:commandButton icon="pi pi-angle-double-left" styleClass="ui-button-flat"
+                                         disabled="#{adminUsersBean.result.first}"
+                                         action="#{adminUsersBean.goToPage(0)}"
+                                         process="@this" update="usersForm:results"/>
+                        <p:commandButton icon="pi pi-angle-left" styleClass="ui-button-flat"
+                                         disabled="#{not adminUsersBean.result.hasPrevious()}"
+                                         action="#{adminUsersBean.goToPage(adminUsersBean.result.number - 1)}"
+                                         process="@this" update="usersForm:results"/>
+                        <p:commandButton icon="pi pi-angle-right" styleClass="ui-button-flat"
+                                         disabled="#{not adminUsersBean.result.hasNext()}"
+                                         action="#{adminUsersBean.goToPage(adminUsersBean.result.number + 1)}"
+                                         process="@this" update="usersForm:results"/>
+                        <p:commandButton icon="pi pi-angle-double-right" styleClass="ui-button-flat"
+                                         disabled="#{adminUsersBean.result.last}"
+                                         action="#{adminUsersBean.goToPage(adminUsersBean.lastPage)}"
+                                         process="@this" update="usersForm:results"/>
+
+                        <p:selectOneMenu id="size" value="#{adminUsersBean.filter.size}">
+                            <f:selectItem itemLabel="10" itemValue="#{10}"/>
+                            <f:selectItem itemLabel="20" itemValue="#{20}"/>
+                            <f:selectItem itemLabel="50" itemValue="#{50}"/>
+                            <p:ajax listener="#{adminUsersBean.changeSize}" update="usersForm:results"/>
+                        </p:selectOneMenu>
+                    </p:toolbarGroup>
+                </p:toolbar>
+
+            </p:outputPanel>
+        </h:form>
+    </ui:define>
+
+</ui:composition>

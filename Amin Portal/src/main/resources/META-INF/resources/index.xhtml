@@ -1,9 +1,11 @@
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:h="jakarta.faces.html"
-      xmlns:p="primefaces">
-<h:head><title>Home</title></h:head>
-<h:body>
-    <h:outputText value="#{homeBean.message}"/>
-</h:body>
-</html>
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="jakarta.faces.facelets"
+                template="/templates/layout.xhtml">
+
+    <ui:define name="title">Home Page</ui:define>
+
+    <ui:define name="content">
+        <p>Home page</p>
+    </ui:define>
+
+</ui:composition>

@@ -40,7 +40,9 @@ public final class SpecificationBuilder {
         Specification<T> result = (root, q, cb) -> cb.conjunction();
         if (criteria == null) return result;
         for (SearchCriteria c : criteria) {
-            result = result.and(of(c));
+            if(c.value() != null) {
+                result = result.and(of(c));
+            }
         }
         return result;
     }
