@@ -1,8 +1,7 @@
 package com.cedacri.internship.configs;
 
 import com.cedacri.internship.entities.user.AdminUser;
-import com.cedacri.internship.services.AdminUserService;
-import jakarta.servlet.http.HttpServletResponse;
+import com.cedacri.internship.services.user.AdminUserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;

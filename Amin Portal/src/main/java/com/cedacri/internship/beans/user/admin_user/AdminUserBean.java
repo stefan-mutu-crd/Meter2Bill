@@ -1,9 +1,9 @@
-package com.cedacri.internship.beans.admin_user;
+package com.cedacri.internship.beans.user.admin_user;
 
-import com.cedacri.internship.dtos.AdminUserSearchDto;
+import com.cedacri.internship.dtos.user.AdminUserSearchDto;
 import com.cedacri.internship.edums.AdminUserRole;
 import com.cedacri.internship.entities.user.AdminUser;
-import com.cedacri.internship.services.AdminUserService;
+import com.cedacri.internship.services.user.AdminUserService;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import org.springframework.context.annotation.Scope;

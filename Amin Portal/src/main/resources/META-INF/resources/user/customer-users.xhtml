@@ -1,0 +1,196 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:p="primefaces"
+                template="/templates/layout.xhtml">
+
+    <ui:define name="title">Admin - Customers</ui:define>
+
+    <ui:define name="content">
+        <style>
+            .list-page {
+                max-width: 1200px;
+                margin: 1.5rem auto;
+                padding: 0 1rem;
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+            }
+            .filter-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 1rem 1.5rem;
+            }
+            .field { display: flex; flex-direction: column; gap: .4rem; min-width: 0; }
+            .field > label { font-weight: 600; }
+            .field .ui-inputfield,
+            .field .ui-selectonemenu { width: 100%; box-sizing: border-box; }
+            .actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin-top: 1rem; }
+            .actions .spacer { flex: 1; }
+            .page-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+            .page-head h2 { margin: 0; }
+        </style>
+
+        <h:form id="customersForm">
+            <p:growl id="growl" showDetail="true" life="4000"/>
+
+            <div class="list-page">
+
+                <div class="page-head">
+                    <h2>Customers</h2>
+                    <p:linkButton outcome="customer-user-form" value="New customer" icon="pi pi-plus"/>
+                </div>
+
+                <!-- ================= FILTER ================= -->
+                <p:card>
+                    <f:facet name="title">Filter</f:facet>
+
+                    <div class="filter-grid">
+                        <div class="field">
+                            <p:outputLabel for="username" value="Username"/>
+                            <p:inputText id="username" value="#{customerUsersBean.filter.username}"/>
+                        </div>
+                        <div class="field">
+                            <p:outputLabel for="firstName" value="First name"/>
+                            <p:inputText id="firstName" value="#{customerUsersBean.filter.firstName}"/>
+                        </div>
+                        <div class="field">
+                            <p:outputLabel for="lastName" value="Last name"/>
+                            <p:inputText id="lastName" value="#{customerUsersBean.filter.lastName}"/>
+                        </div>
+                        <div class="field">
+                            <p:outputLabel for="email" value="Email"/>
+                            <p:inputText id="email" value="#{customerUsersBean.filter.email}"/>
+                        </div>
+                        <div class="field">
+                            <p:outputLabel for="active" value="Active"/>
+                            <p:selectOneMenu id="active" value="#{customerUsersBean.filter.enabled}">
+                                <f:selectItem itemLabel="All" itemValue="#{null}" noSelectionOption="true"/>
+                                <f:selectItem itemLabel="Yes" itemValue="#{true}"/>
+                                <f:selectItem itemLabel="No" itemValue="#{false}"/>
+                            </p:selectOneMenu>
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <p:commandButton value="Search" icon="pi pi-search"
+                                         action="#{customerUsersBean.search}"
+                                         process="@this username firstName lastName email active"
+                                         update="results"/>
+                        <p:commandButton value="Reset" icon="pi pi-times"
+                                         styleClass="ui-button-secondary"
+                                         action="#{customerUsersBean.reset}"
+                                         process="@this"
+                                         update="@form"/>
+                    </div>
+                </p:card>
+
+                <!-- ================= LIST + PAGINATION ================= -->
+                <p:outputPanel id="results">
+                    <p:card>
+                        <p:dataTable id="customersTable"
+                                     value="#{customerUsersBean.result.content}" var="c"
+                                     emptyMessage="No customers found">
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Username" styleClass="ui-button-flat"
+                                                     icon="#{customerUsersBean.sortIcon('username')}" iconPos="right"
+                                                     action="#{customerUsersBean.sortBy('username')}"
+                                                     process="@this" update="customersForm:results"/>
+                                </f:facet>
+                                <h:outputText value="#{c.username}"/>
+                            </p:column>
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="First name" styleClass="ui-button-flat"
+                                                     icon="#{customerUsersBean.sortIcon('person.firstName')}" iconPos="right"
+                                                     action="#{customerUsersBean.sortBy('person.firstName')}"
+                                                     process="@this" update="customersForm:results"/>
+                                </f:facet>
+                                <h:outputText value="#{c.person.firstName}"/>
+                            </p:column>
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Last name" styleClass="ui-button-flat"
+                                                     icon="#{customerUsersBean.sortIcon('person.lastName')}" iconPos="right"
+                                                     action="#{customerUsersBean.sortBy('person.lastName')}"
+                                                     process="@this" update="customersForm:results"/>
+                                </f:facet>
+                                <h:outputText value="#{c.person.lastName}"/>
+                            </p:column>
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Email" styleClass="ui-button-flat"
+                                                     icon="#{customerUsersBean.sortIcon('person.email')}" iconPos="right"
+                                                     action="#{customerUsersBean.sortBy('person.email')}"
+                                                     process="@this" update="customersForm:results"/>
+                                </f:facet>
+                                <h:outputText value="#{c.person.email}"/>
+                            </p:column>
+
+                            <p:column headerText="Phone">
+                                <h:outputText value="#{c.person.phoneNumber}"/>
+                            </p:column>
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Active" styleClass="ui-button-flat"
+                                                     icon="#{customerUsersBean.sortIcon('enabled')}" iconPos="right"
+                                                     action="#{customerUsersBean.sortBy('enabled')}"
+                                                     process="@this" update="customersForm:results"/>
+                                </f:facet>
+                                <p:tag value="#{c.enabled ? 'Active' : 'Inactive'}"
+                                       severity="#{c.enabled ? 'success' : 'danger'}"/>
+                            </p:column>
+
+                            <p:column headerText="" style="width: 4rem; text-align: center">
+                                <p:linkButton outcome="customer-user-form" icon="pi pi-pencil"
+                                              styleClass="ui-button-flat" title="Edit">
+                                    <f:param name="id" value="#{c.id}"/>
+                                </p:linkButton>
+                            </p:column>
+                        </p:dataTable>
+
+                        <!-- pagination bar -->
+                        <div class="actions">
+                            <h:outputText
+                                    value="Page #{customerUsersBean.result.number + 1} of #{customerUsersBean.lastPage + 1} (#{customerUsersBean.result.totalElements} customers)"/>
+                            <span class="spacer"></span>
+
+                            <p:commandButton icon="pi pi-angle-double-left" styleClass="ui-button-flat"
+                                             disabled="#{customerUsersBean.result.first}"
+                                             action="#{customerUsersBean.goToPage(0)}"
+                                             process="@this" update="customersForm:results"/>
+                            <p:commandButton icon="pi pi-angle-left" styleClass="ui-button-flat"
+                                             disabled="#{not customerUsersBean.result.hasPrevious()}"
+                                             action="#{customerUsersBean.goToPage(customerUsersBean.result.number - 1)}"
+                                             process="@this" update="customersForm:results"/>
+                            <p:commandButton icon="pi pi-angle-right" styleClass="ui-button-flat"
+                                             disabled="#{not customerUsersBean.result.hasNext()}"
+                                             action="#{customerUsersBean.goToPage(customerUsersBean.result.number + 1)}"
+                                             process="@this" update="customersForm:results"/>
+                            <p:commandButton icon="pi pi-angle-double-right" styleClass="ui-button-flat"
+                                             disabled="#{customerUsersBean.result.last}"
+                                             action="#{customerUsersBean.goToPage(customerUsersBean.lastPage)}"
+                                             process="@this" update="customersForm:results"/>
+
+                            <p:selectOneMenu id="size" value="#{customerUsersBean.filter.size}">
+                                <f:selectItem itemLabel="10" itemValue="#{10}"/>
+                                <f:selectItem itemLabel="20" itemValue="#{20}"/>
+                                <f:selectItem itemLabel="50" itemValue="#{50}"/>
+                                <p:ajax listener="#{customerUsersBean.changeSize}" update="customersForm:results"/>
+                            </p:selectOneMenu>
+                        </div>
+                    </p:card>
+                </p:outputPanel>
+
+            </div>
+        </h:form>
+    </ui:define>
+
+</ui:composition>

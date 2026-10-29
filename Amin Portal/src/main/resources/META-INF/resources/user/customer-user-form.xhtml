@@ -1,0 +1,369 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:p="primefaces"
+                template="/templates/layout.xhtml">
+
+    <ui:define name="title">
+        Admin - #{customerUserFormBean.editMode ? 'Edit customer' : 'New customer'}
+    </ui:define>
+
+    <ui:define name="content">
+        <style>
+            .user-page {
+                max-width: 900px;
+                margin: 1.5rem auto;
+                padding: 0 1rem;
+                display: flex;
+                flex-direction: column;
+                gap: 1rem;
+            }
+            .form-grid {
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 1rem 1.5rem;
+            }
+            .form-grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .form-grid .wide { grid-column: 1 / -1; }
+            @media (max-width: 640px) {
+                .form-grid, .form-grid.three { grid-template-columns: 1fr; }
+            }
+            .field { display: flex; flex-direction: column; gap: .4rem; min-width: 0; }
+            .field > label { font-weight: 600; }
+            .field .ui-inputfield,
+            .field .ui-selectonemenu,
+            .field .ui-password,
+            .field .ui-password input,
+            .field .ui-calendar,
+            .field .ui-calendar input { width: 100%; box-sizing: border-box; }
+            .field .ui-message { margin: 0; padding: 0; min-height: 1.1rem; }
+            .actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+            .actions .spacer { flex: 1; }
+        </style>
+
+        <h:form id="customerForm">
+
+            <p:growl id="growl" showDetail="true" life="4000"/>
+
+            <div class="user-page">
+
+                <!-- ================= NOT FOUND ================= -->
+                <p:card rendered="#{customerUserFormBean.notFound}">
+                    <f:facet name="title">Customer not found</f:facet>
+                    <p>The requested customer does not exist.</p>
+                    <p:linkButton outcome="customer-users" value="Back to list" icon="pi pi-arrow-left"/>
+                </p:card>
+
+                <ui:fragment rendered="#{not customerUserFormBean.notFound}">
+
+                    <!-- ================= 1a. ACCOUNT ================= -->
+                    <p:card id="accountCard">
+                        <f:facet name="title">
+                            #{customerUserFormBean.editMode ? 'Edit customer' : 'New customer'} – account
+                        </f:facet>
+
+                        <div class="form-grid">
+                            <div class="field wide">
+                                <p:outputLabel for="username" value="Username"/>
+                                <p:inputText id="username" value="#{customerUserFormBean.username}"
+                                             required="true" maxlength="50"
+                                             requiredMessage="Username is required"
+                                             validatorMessage="3–50 characters: letters, digits, '.', '_' or '-'">
+                                    <f:validateRegex pattern="^[A-Za-z0-9._-]{3,50}$"/>
+                                    <p:ajax event="blur" update="usernameMsg"/>
+                                </p:inputText>
+                                <p:message id="usernameMsg" for="username" display="text"/>
+                            </div>
+
+                            <!-- Passwords: ADD mode only -->
+                            <ui:fragment rendered="#{not customerUserFormBean.editMode}">
+                                <div class="field">
+                                    <p:outputLabel for="password" value="Password"/>
+                                    <p:password id="password" value="#{customerUserFormBean.password}"
+                                                required="true" feedback="true" toggleMask="true" maxlength="64"
+                                                requiredMessage="Password is required"
+                                                validatorMessage="8–64 characters, at least one letter and one digit">
+                                        <f:validateRegex pattern="^(?=.*[A-Za-z])(?=.*\d).{8,64}$"/>
+                                    </p:password>
+                                    <p:message id="passwordMsg" for="password" display="text"/>
+                                </div>
+
+                                <div class="field">
+                                    <p:outputLabel for="confirmPassword" value="Confirm password"/>
+                                    <p:password id="confirmPassword" value="#{customerUserFormBean.confirmPassword}"
+                                                required="true" toggleMask="true" maxlength="64"
+                                                requiredMessage="Please confirm the password"
+                                                validator="#{customerUserFormBean.validatePasswordMatch}">
+                                        <f:attribute name="matchWith" value="password"/>
+                                    </p:password>
+                                    <p:message id="confirmPasswordMsg" for="confirmPassword" display="text"/>
+                                </div>
+                            </ui:fragment>
+                        </div>
+                    </p:card>
+
+                    <!-- ================= 1b. PERSONAL DATA ================= -->
+                    <p:card id="personCard">
+                        <f:facet name="title">Personal data</f:facet>
+
+                        <div class="form-grid">
+                            <div class="field">
+                                <p:outputLabel for="firstName" value="First name"/>
+                                <p:inputText id="firstName" value="#{customerUserFormBean.firstName}"
+                                             required="true" maxlength="45"
+                                             requiredMessage="First name is required"
+                                             validatorMessage="Up to 45 letters, spaces, '-' or apostrophe">
+                                    <f:validateRegex pattern="^\p{L}[\p{L} '\-]{0,44}$"/>
+                                    <p:ajax event="blur" update="firstNameMsg"/>
+                                </p:inputText>
+                                <p:message id="firstNameMsg" for="firstName" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="lastName" value="Last name"/>
+                                <p:inputText id="lastName" value="#{customerUserFormBean.lastName}"
+                                             required="true" maxlength="45"
+                                             requiredMessage="Last name is required"
+                                             validatorMessage="Up to 45 letters, spaces, '-' or apostrophe">
+                                    <f:validateRegex pattern="^\p{L}[\p{L} '\-]{0,44}$"/>
+                                    <p:ajax event="blur" update="lastNameMsg"/>
+                                </p:inputText>
+                                <p:message id="lastNameMsg" for="lastName" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="dateOfBirth" value="Date of birth"/>
+                                <p:datePicker id="dateOfBirth" value="#{customerUserFormBean.dateOfBirth}"
+                                              required="true" requiredMessage="Date of birth is required"
+                                              pattern="dd.MM.yyyy" showIcon="true"
+                                              monthNavigator="true" yearNavigator="true" yearRange="c-100:c"
+                                              maxdate="#{customerUserFormBean.today}">
+                                    <p:ajax event="dateSelect" update="dateOfBirthMsg"/>
+                                </p:datePicker>
+                                <p:message id="dateOfBirthMsg" for="dateOfBirth" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="gender" value="Gender"/>
+                                <p:selectOneMenu id="gender" value="#{customerUserFormBean.gender}">
+                                    <f:selectItem itemLabel="Not specified" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{customerUserFormBean.genders}" var="g"
+                                                   itemLabel="#{g}" itemValue="#{g}"/>
+                                </p:selectOneMenu>
+                                <p:message id="genderMsg" for="gender" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="socialId" value="Social ID (CNP)"/>
+                                <p:inputText id="socialId" value="#{customerUserFormBean.socialId}"
+                                             maxlength="13"
+                                             validatorMessage="Social ID must be exactly 13 digits">
+                                    <f:validateRegex pattern="^(\d{13})?$"/>
+                                    <p:ajax event="blur" update="socialIdMsg"/>
+                                </p:inputText>
+                                <p:message id="socialIdMsg" for="socialId" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="phoneNumber" value="Phone number"/>
+                                <p:inputText id="phoneNumber" value="#{customerUserFormBean.phoneNumber}"
+                                             maxlength="16"
+                                             validatorMessage="7–15 digits, optional leading '+'">
+                                    <f:validateRegex pattern="^(\+?[0-9]{7,15})?$"/>
+                                    <p:ajax event="blur" update="phoneNumberMsg"/>
+                                </p:inputText>
+                                <p:message id="phoneNumberMsg" for="phoneNumber" display="text"/>
+                            </div>
+
+                            <div class="field wide">
+                                <p:outputLabel for="email" value="Email"/>
+                                <p:inputText id="email" value="#{customerUserFormBean.email}"
+                                             maxlength="254" type="email"
+                                             validatorMessage="Enter a valid email address (max 254 characters)">
+                                    <f:validateLength maximum="254"/>
+                                    <f:validateRegex pattern="^([^@\s]+@[^@\s]+\.[^@\s]+)?$"/>
+                                    <p:ajax event="blur" update="emailMsg"/>
+                                </p:inputText>
+                                <p:message id="emailMsg" for="email" display="text"/>
+                            </div>
+                        </div>
+                    </p:card>
+
+                    <!-- ================= 1c. ADDRESS ================= -->
+                    <p:card id="addressCard">
+                        <f:facet name="title">Address</f:facet>
+
+                        <div class="form-grid three">
+                            <div class="field">
+                                <p:outputLabel for="city" value="City"/>
+                                <p:inputText id="city" value="#{customerUserFormBean.city}" maxlength="60"
+                                             validatorMessage="Max 60 characters">
+                                    <f:validateLength maximum="60"/>
+                                </p:inputText>
+                                <p:message id="cityMsg" for="city" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="district" value="District"/>
+                                <p:inputText id="district" value="#{customerUserFormBean.district}" maxlength="60"
+                                             validatorMessage="Max 60 characters">
+                                    <f:validateLength maximum="60"/>
+                                </p:inputText>
+                                <p:message id="districtMsg" for="district" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="street" value="Street"/>
+                                <p:inputText id="street" value="#{customerUserFormBean.street}" maxlength="100"
+                                             validatorMessage="Max 100 characters">
+                                    <f:validateLength maximum="100"/>
+                                </p:inputText>
+                                <p:message id="streetMsg" for="street" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="streetNumber" value="Number"/>
+                                <p:inputText id="streetNumber" value="#{customerUserFormBean.streetNumber}" maxlength="10"
+                                             validatorMessage="Max 10 characters">
+                                    <f:validateLength maximum="10"/>
+                                </p:inputText>
+                                <p:message id="streetNumberMsg" for="streetNumber" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="block" value="Block"/>
+                                <p:inputText id="block" value="#{customerUserFormBean.block}" maxlength="10"
+                                             validatorMessage="Max 10 characters">
+                                    <f:validateLength maximum="10"/>
+                                </p:inputText>
+                                <p:message id="blockMsg" for="block" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="floor" value="Floor"/>
+                                <p:inputText id="floor" value="#{customerUserFormBean.floor}" maxlength="5"
+                                             validatorMessage="Max 5 characters">
+                                    <f:validateLength maximum="5"/>
+                                </p:inputText>
+                                <p:message id="floorMsg" for="floor" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="apartment" value="Apartment"/>
+                                <p:inputText id="apartment" value="#{customerUserFormBean.apartment}" maxlength="10"
+                                             validatorMessage="Max 10 characters">
+                                    <f:validateLength maximum="10"/>
+                                </p:inputText>
+                                <p:message id="apartmentMsg" for="apartment" display="text"/>
+                            </div>
+                        </div>
+                    </p:card>
+
+                    <!-- ================= 2a. ADD MODE: operations ================= -->
+                    <p:card rendered="#{not customerUserFormBean.editMode}">
+                        <f:facet name="title">Operations</f:facet>
+                        <div class="actions">
+                            <p:commandButton value="Add" icon="pi pi-plus"
+                                             action="#{customerUserFormBean.create}"
+                                             process="@this accountCard personCard addressCard"
+                                             update="accountCard personCard addressCard growl"/>
+                            <span class="spacer"></span>
+                            <p:linkButton outcome="customer-users" value="Cancel" icon="pi pi-times"
+                                          styleClass="ui-button-secondary"/>
+                        </div>
+                    </p:card>
+
+                    <!-- ================= 2b. EDIT MODE: change password ================= -->
+                    <p:card id="passwordCard" rendered="#{customerUserFormBean.editMode}">
+                        <f:facet name="title">Change password</f:facet>
+
+                        <div class="form-grid">
+                            <div class="field">
+                                <p:outputLabel for="newPassword" value="New password"/>
+                                <p:password id="newPassword" value="#{customerUserFormBean.newPassword}"
+                                            required="true" feedback="true" toggleMask="true" maxlength="64"
+                                            requiredMessage="New password is required"
+                                            validatorMessage="8–64 characters, at least one letter and one digit">
+                                    <f:validateRegex pattern="^(?=.*[A-Za-z])(?=.*\d).{8,64}$"/>
+                                </p:password>
+                                <p:message id="newPasswordMsg" for="newPassword" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="confirmNewPassword" value="Confirm new password"/>
+                                <p:password id="confirmNewPassword" value="#{customerUserFormBean.confirmNewPassword}"
+                                            required="true" toggleMask="true" maxlength="64"
+                                            requiredMessage="Please confirm the new password"
+                                            validator="#{customerUserFormBean.validatePasswordMatch}">
+                                    <f:attribute name="matchWith" value="newPassword"/>
+                                </p:password>
+                                <p:message id="confirmNewPasswordMsg" for="confirmNewPassword" display="text"/>
+                            </div>
+                        </div>
+
+                        <div class="actions">
+                            <p:commandButton value="Update password" icon="pi pi-key"
+                                             process="@this newPassword confirmNewPassword"
+                                             update="passwordCard"
+                                             oncomplete="if (args &amp;&amp; !args.validationFailed) PF('passwordDlg').show()"/>
+                        </div>
+                    </p:card>
+
+                    <!-- ================= 3. EDIT MODE: actions ================= -->
+                    <p:card rendered="#{customerUserFormBean.editMode}">
+                        <f:facet name="title">Actions</f:facet>
+                        <div class="actions">
+                            <p:commandButton value="Update" icon="pi pi-save"
+                                             action="#{customerUserFormBean.update}"
+                                             process="@this accountCard personCard addressCard"
+                                             update="accountCard personCard addressCard growl"/>
+
+                            <p:commandButton value="Delete" icon="pi pi-trash"
+                                             styleClass="ui-button-danger"
+                                             action="#{customerUserFormBean.delete}"
+                                             process="@this">
+                                <p:confirm header="Delete customer"
+                                           message="Delete customer '#{customerUserFormBean.username}'? Personal data and address are deleted too. This cannot be undone."
+                                           icon="pi pi-exclamation-triangle"/>
+                            </p:commandButton>
+
+                            <span class="spacer"></span>
+
+                            <p:linkButton outcome="customer-users" value="Back to list" icon="pi pi-arrow-left"
+                                          styleClass="ui-button-secondary"/>
+                        </div>
+                    </p:card>
+
+                </ui:fragment>
+            </div>
+        </h:form>
+
+        <!-- ================= DIALOGS: own forms ================= -->
+        <h:form id="confirmForm">
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true">
+                <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes ui-button-danger" icon="pi pi-check"/>
+                <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary" icon="pi pi-times"/>
+            </p:confirmDialog>
+        </h:form>
+
+        <h:form id="passwordDlgForm" rendered="#{customerUserFormBean.editMode}">
+            <p:dialog id="passwordDlg" widgetVar="passwordDlg" header="Change password"
+                      modal="true" resizable="false" draggable="false" closeOnEscape="true"
+                      width="420">
+                <p>Change the password for customer <strong>#{customerUserFormBean.username}</strong>?</p>
+                <f:facet name="footer">
+                    <p:commandButton value="Yes, change it" icon="pi pi-check"
+                                     action="#{customerUserFormBean.changePassword}"
+                                     process="@this"
+                                     update=":customerForm:passwordCard :customerForm:growl"
+                                     oncomplete="PF('passwordDlg').hide()"/>
+                    <p:commandButton value="Cancel" icon="pi pi-times" type="button"
+                                     styleClass="ui-button-secondary"
+                                     onclick="PF('passwordDlg').hide()"/>
+                </f:facet>
+            </p:dialog>
+        </h:form>
+    </ui:define>
+
+</ui:composition>

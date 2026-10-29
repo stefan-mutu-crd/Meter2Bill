@@ -1,7 +1,6 @@
 <ui:composition xmlns="http://www.w3.org/1999/xhtml"
                 xmlns:ui="jakarta.faces.facelets"
                 xmlns:f="jakarta.faces.core"
-                xmlns:h="jakarta.faces.html"
                 xmlns:p="primefaces">
 
     <p:menubar hideDelay="1000">
@@ -9,8 +8,8 @@
             <p:graphicImage name="images/logo.png" height="25px"/>
         </f:facet>
         <p:submenu label="Users" icon="pi pi-fw pi-user">
-            <p:menuitem value="Employee" icon="pi pi-users" outcome="/admin-users"/>
-            <p:menuitem value="Customers"/>
+            <p:menuitem value="Employee" icon="pi pi-users" outcome="/user/admin-users"/>
+            <p:menuitem value="Customer" icon="pi pi-users" outcome="/user/customer-users"/>
         </p:submenu>
     </p:menubar>
 

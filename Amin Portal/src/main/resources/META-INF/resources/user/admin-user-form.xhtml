@@ -1,0 +1,211 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:p="primefaces"
+                template="/templates/layout.xhtml">
+
+    <ui:define name="title">
+        Admin - #{adminUserFormBean.editMode ? 'Edit user' : 'New user'}
+    </ui:define>
+
+    <ui:define name="content">
+        <h:form id="userForm">
+
+            <p:growl id="growl" showDetail="true" life="4000"/>
+
+            <div class="user-page">
+
+                <!-- ================= NOT FOUND ================= -->
+                <p:card rendered="#{adminUserFormBean.notFound}">
+                    <f:facet name="title">User not found</f:facet>
+                    <p>The requested user does not exist.</p>
+                    <p:linkButton outcome="/user/admin-users" value="Back to list" icon="pi pi-arrow-left"/>
+                </p:card>
+
+                <ui:fragment rendered="#{not adminUserFormBean.notFound}">
+
+                    <!-- ================= 1. DETAILS ================= -->
+                    <p:card id="detailsCard">
+                        <f:facet name="title">
+                            #{adminUserFormBean.editMode ? 'Edit user' : 'New user'}
+                        </f:facet>
+
+                        <div class="form-grid">
+
+                            <div class="field">
+                                <p:outputLabel for="fullName" value="Full name"/>
+                                <p:inputText id="fullName" value="#{adminUserFormBean.fullName}"
+                                             required="true" maxlength="100"
+                                             requiredMessage="Full name is required"
+                                             validatorMessage="Full name must be 2–100 characters">
+                                    <f:validateLength minimum="2" maximum="100"/>
+                                    <f:validateRegex pattern=".*\S.*"/>
+                                    <p:ajax event="blur" update="fullNameMsg"/>
+                                </p:inputText>
+                                <p:message id="fullNameMsg" for="fullName" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="username" value="Username"/>
+                                <p:inputText id="username" value="#{adminUserFormBean.username}"
+                                             required="true" maxlength="50"
+                                             requiredMessage="Username is required"
+                                             validatorMessage="3–50 characters: letters, digits, '.', '_' or '-'">
+                                    <f:validateRegex pattern="^[A-Za-z0-9._-]{3,50}$"/>
+                                    <p:ajax event="blur" update="usernameMsg"/>
+                                </p:inputText>
+                                <p:message id="usernameMsg" for="username" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="role" value="Role"/>
+                                <p:selectOneMenu id="role" value="#{adminUserFormBean.role}"
+                                                 required="true" requiredMessage="Role is required">
+                                    <f:selectItem itemLabel="Select role" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{adminUserFormBean.roles}" var="r"
+                                                   itemLabel="#{r}" itemValue="#{r}"/>
+                                    <p:ajax event="change" update="roleMsg"/>
+                                </p:selectOneMenu>
+                                <p:message id="roleMsg" for="role" display="text"/>
+                            </div>
+
+                            <!-- keeps the grid even: role sits alone on its row -->
+                            <div></div>
+
+                            <!-- Passwords: ADD mode only -->
+                            <ui:fragment rendered="#{not adminUserFormBean.editMode}">
+                                <div class="field">
+                                    <p:outputLabel for="password" value="Password"/>
+                                    <p:password id="password" value="#{adminUserFormBean.password}"
+                                                required="true" feedback="true" toggleMask="true" maxlength="64"
+                                                requiredMessage="Password is required"
+                                                validatorMessage="8–64 characters, at least one letter and one digit">
+                                        <f:validateRegex pattern="^(?=.*[A-Za-z])(?=.*\d).{8,64}$"/>
+                                    </p:password>
+                                    <p:message id="passwordMsg" for="password" display="text"/>
+                                </div>
+
+                                <div class="field">
+                                    <p:outputLabel for="confirmPassword" value="Confirm password"/>
+                                    <p:password id="confirmPassword" value="#{adminUserFormBean.confirmPassword}"
+                                                required="true" toggleMask="true" maxlength="64"
+                                                requiredMessage="Please confirm the password"
+                                                validator="#{adminUserFormBean.validatePasswordMatch}">
+                                        <f:attribute name="matchWith" value="password"/>
+                                    </p:password>
+                                    <p:message id="confirmPasswordMsg" for="confirmPassword" display="text"/>
+                                </div>
+                            </ui:fragment>
+                        </div>
+                    </p:card>
+
+                    <!-- ================= 2a. ADD MODE: operations ================= -->
+                    <p:card rendered="#{not adminUserFormBean.editMode}">
+                        <f:facet name="title">Operations</f:facet>
+                        <div class="actions">
+                            <p:commandButton value="Add" icon="pi pi-plus"
+                                             action="#{adminUserFormBean.create}"
+                                             process="@this fullName username role password confirmPassword"
+                                             update="detailsCard growl"/>
+                            <span class="spacer"></span>
+                            <p:linkButton outcome="/user/admin-users" value="Cancel" icon="pi pi-times"
+                                          styleClass="ui-button-secondary"/>
+                        </div>
+                    </p:card>
+
+                    <!-- ================= 2b. EDIT MODE: change password ================= -->
+                    <p:card id="passwordCard" rendered="#{adminUserFormBean.editMode}">
+                        <f:facet name="title">Change password</f:facet>
+
+                        <div class="form-grid">
+                            <div class="field">
+                                <p:outputLabel for="newPassword" value="New password"/>
+                                <p:password id="newPassword" value="#{adminUserFormBean.newPassword}"
+                                            required="true" feedback="true" toggleMask="true" maxlength="64"
+                                            requiredMessage="New password is required"
+                                            validatorMessage="8–64 characters, at least one letter and one digit">
+                                    <f:validateRegex pattern="^(?=.*[A-Za-z])(?=.*\d).{8,64}$"/>
+                                </p:password>
+                                <p:message id="newPasswordMsg" for="newPassword" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="confirmNewPassword" value="Confirm new password"/>
+                                <p:password id="confirmNewPassword" value="#{adminUserFormBean.confirmNewPassword}"
+                                            required="true" toggleMask="true" maxlength="64"
+                                            requiredMessage="Please confirm the new password"
+                                            validator="#{adminUserFormBean.validatePasswordMatch}">
+                                    <f:attribute name="matchWith" value="newPassword"/>
+                                </p:password>
+                                <p:message id="confirmNewPasswordMsg" for="confirmNewPassword" display="text"/>
+                            </div>
+                        </div>
+
+                        <div class="actions">
+                            <!-- validates first; the modal only opens when both fields are valid -->
+                            <p:commandButton value="Update password" icon="pi pi-key"
+                                             process="@this newPassword confirmNewPassword"
+                                             update="passwordCard"
+                                             oncomplete="if (args &amp;&amp; !args.validationFailed) PF('passwordDlg').show()"/>
+                        </div>
+                    </p:card>
+
+                    <!-- ================= 3. EDIT MODE: actions ================= -->
+                    <p:card rendered="#{adminUserFormBean.editMode}">
+                        <f:facet name="title">Actions</f:facet>
+                        <div class="actions">
+                            <p:commandButton value="Update" icon="pi pi-save"
+                                             action="#{adminUserFormBean.update}"
+                                             process="@this fullName username role"
+                                             update="detailsCard growl"/>
+
+                            <p:commandButton value="Delete" icon="pi pi-trash"
+                                             styleClass="ui-button-danger"
+                                             action="#{adminUserFormBean.delete}"
+                                             process="@this">
+                                <p:confirm header="Delete user"
+                                           message="Delete user '#{adminUserFormBean.username}'? This cannot be undone."
+                                           icon="pi pi-exclamation-triangle"/>
+                            </p:commandButton>
+
+                            <span class="spacer"></span>
+
+                            <p:linkButton outcome="/user/admin-users" value="Back to list" icon="pi pi-arrow-left"
+                                          styleClass="ui-button-secondary"/>
+                        </div>
+                    </p:card>
+
+                </ui:fragment>
+            </div>
+        </h:form>
+
+        <!-- ================= DIALOGS: own forms, outside userForm ================= -->
+        <h:form id="confirmForm">
+            <!-- global confirm dialog (used by Delete) -->
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true">
+                <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes ui-button-danger" icon="pi pi-check"/>
+                <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary" icon="pi pi-times"/>
+            </p:confirmDialog>
+        </h:form>
+
+        <h:form id="passwordDlgForm" rendered="#{adminUserFormBean.editMode}">
+            <p:dialog id="passwordDlg" widgetVar="passwordDlg" header="Change password"
+                      modal="true" resizable="false" draggable="false" closeOnEscape="true"
+                      width="420">
+                <p>Change the password for user <strong>#{adminUserFormBean.username}</strong>?</p>
+                <f:facet name="footer">
+                    <p:commandButton value="Yes, change it" icon="pi pi-check"
+                                     action="#{adminUserFormBean.changePassword}"
+                                     process="@this"
+                                     update=":userForm:passwordCard :userForm:growl"
+                                     oncomplete="PF('passwordDlg').hide()"/>
+                    <p:commandButton value="Cancel" icon="pi pi-times" type="button"
+                                     styleClass="ui-button-secondary"
+                                     onclick="PF('passwordDlg').hide()"/>
+                </f:facet>
+            </p:dialog>
+        </h:form>
+    </ui:define>
+
+</ui:composition>

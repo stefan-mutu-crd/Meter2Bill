@@ -1,5 +1,6 @@
-package com.cedacri.internship.dtos;
+package com.cedacri.internship.dtos.user;
 
+import com.cedacri.internship.dtos.BaseSearchDto;
 import com.cedacri.internship.edums.AdminUserRole;
 import com.cedacri.internship.models.specification.SearchCriteria;
 import lombok.Getter;

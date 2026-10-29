@@ -1,9 +1,9 @@
-package com.cedacri.internship.services.impl;
+package com.cedacri.internship.services.impl.user;
 
 import com.cedacri.internship.entities.user.AdminUser;
 import com.cedacri.internship.models.specification.SearchCriteria;
 import com.cedacri.internship.repositories.AdminUserRepository;
-import com.cedacri.internship.services.AdminUserService;
+import com.cedacri.internship.services.user.AdminUserService;
 import com.cedacri.internship.services.BaseAbstractService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
