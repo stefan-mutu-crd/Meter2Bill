@@ -4,6 +4,18 @@
       xmlns:h="jakarta.faces.html">
 <h:head>
     <title><ui:insert name="title">MyApp</ui:insert></title>
+
+    <!-- Same base as the PrimeFaces showcase: themes are sized in rem, the showcase uses 14px -->
+    <style>
+        html { font-size: 14px; }
+        body {
+            margin: 0;
+            font-family: var(--font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif);
+            background: var(--surface-ground, #f8f9fa);
+            color: var(--text-color, #495057);
+        }
+    </style>
+
 </h:head>
 <h:body>
 

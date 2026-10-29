@@ -1,4 +1,4 @@
-package com.cedacri.internship.beans;
+package com.cedacri.internship.beans.admin_user;
 
 import com.cedacri.internship.dtos.AdminUserSearchDto;
 import com.cedacri.internship.edums.AdminUserRole;
