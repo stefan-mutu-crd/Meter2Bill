@@ -26,6 +26,12 @@ Base pkg: `com.cedacri.internship`.
   - CustomerUserServiceImpl.delete refuses if customer has contracts.
   - `contract.ContractorService`: create(contractor, ownerId) saves Address explicitly then Contractor; update(id, changes, ownerId) copies fields onto managed entity; delete refuses if used by Utility/ContractTemplate, else deletes contractor then its address. Normalizes (trim, fiscalCode/IBAN uppercase no spaces, blank→null), checks fiscalCode unique, resolves owner.
 
+## Tests (common)
+- Service tests only, `src/test/java/.../services/**/*ServiceImplTest`: `@SpringBootTest` on H2 in-memory (`src/test/resources/application.properties`: create-drop, Flyway off). `TestApp` = test boot config (+ `@EnableJpaAuditing`).
+- `TestData` (@Component): `cleanDb()` truncates all tables (call in `@BeforeEach`); no-arg factories `adminUser/address/customer/contractor/inactiveContractor/utility/template/unit/rentedUnit/meter/contract`, overloads with minimal params (`utility(type, contractor)`, `template(utility)`, `unit(parent)`, `meter(type, testedUntil)`, `contract(unit, template)`, `invoice(contract)`). Saves via EntityManager, unique values by counter.
+- Tests are not transactional → assert lazy relations by id only, or reload via repository.
+- Coverage: JaCoCo (parent pom), `mvn -pl common test` → `common/target/site/jacoco/index.html`.
+
 ## Admin Portal (JSF)
 - `configs.SecurityConfig`: form login `/login.xhtml` → POST `/login`, success `/index.xhtml`, logout `/logout`, csrf off, BCrypt, UserDetailsService on AdminUser (role → ROLE_x). Public: login, faces resources.
 - `beans`: Spring `@Component("name")` + `@Scope("view")`, ctor injection, `@PostConstruct init`. Each bean standalone (no base classes).
@@ -55,6 +61,8 @@ Base pkg: `com.cedacri.internship`.
 - Contract CRUD + list (filter customer/unit/template/active on; sort incl. customer/unit/utility/meter; status tag Upcoming/Active/Ended). Meter auto-assigned from pool. Contracts card (paginated, Open in list) on customer form and unit form (+ New contract `?unitId`, disabled without tenant).
 - `V5__contracts_and_meters.sql`: rename `utilities` → `meter`, add meter.utility_type, contract.customer_id (FK, not null); seed meter pool: 50 meters per UtilityType (placeholder manufacturers, serials `EL-00001`…, random secret keys, tested until 2032–2034).
 - `V3__seed_contract_templates.sql`: 11 templates for the V2 utilities (per contractor: monthly auto-renew + longer non-renewing plan; Termoelectrica HOT_WATER monthly only). Prices are placeholders.
+
+- Service unit tests (63) for all service impls + base service, H2 + `TestData`, JaCoCo coverage (services ~93% instructions). Fixed `ContractorServiceImpl.delete` leaving the legal address (lazy proxy → Spring Data `delete` treated it as new and skipped it; now unproxied).
 
 ## Rules (required)
 - Clean code, NO comments/javadoc/section dividers.
@@ -88,4 +96,6 @@ Base pkg: `com.cedacri.internship`.
 - Contract status (Upcoming/Active/Ended) computed in XHTML from dates; no renewal handling for `automaticRenewal` templates yet.
 - Local env: a native Windows PostgreSQL also listens on 5432 and shadows the Docker DB for `localhost`.
 - `dump.sql` is stale (V1 checksum differs from current V1).
+- JPA auditing not enabled in the app (no `@EnableJpaAuditing`) → `creationDate/lastModifiedDate` not set; in tests inserts failed on NOT NULL `creation_date` until enabled in `TestApp` (verify in app, likely needs `@EnableJpaAuditing` on `AdminPortalApp`). Same lazy-proxy `delete` pitfall may hit other `repository.delete(lazyRef)` calls.
+- Not covered by tests: `BaseAbstractService.searchOne/search/update(id, incoming)` (`update(id, incoming)` copies null `version`/audit fields via BeanUtils).
 - Typos: `edums` pkg, `Amin Portal` dir, artifact `metter_to_bill`.

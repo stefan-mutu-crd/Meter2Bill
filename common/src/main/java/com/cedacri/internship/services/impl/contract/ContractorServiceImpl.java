@@ -11,6 +11,7 @@ import com.cedacri.internship.repositories.CustomerUserRepository;
 import com.cedacri.internship.repositories.UtilityRepository;
 import com.cedacri.internship.services.BaseAbstractService;
 import com.cedacri.internship.services.contract.ContractorService;
+import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -76,7 +77,7 @@ public class ContractorServiceImpl extends BaseAbstractService<Contractor, Long>
             throw new BusinessException("Contractor is used by utilities or contract templates. Deactivate it instead.");
         }
         Contractor contractor = findById(id);
-        Address address = contractor.getLegalAddress();
+        Address address = Hibernate.unproxy(contractor.getLegalAddress(), Address.class);
         contractorRepository.delete(contractor);
         contractorRepository.flush();
         addressRepository.delete(address);
