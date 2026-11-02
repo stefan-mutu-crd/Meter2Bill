@@ -1,0 +1,258 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:p="primefaces"
+                template="/templates/layout.xhtml">
+
+    <ui:define name="title">
+        Admin - #{contractorFormBean.editMode ? 'Edit contractor' : 'New contractor'}
+    </ui:define>
+
+    <ui:define name="content">
+        <h:form id="contractorForm">
+
+            <p:growl id="growl" showDetail="true" life="4000"/>
+
+            <div class="user-page">
+
+                <p:card rendered="#{contractorFormBean.notFound}">
+                    <f:facet name="title">Contractor not found</f:facet>
+                    <p>The requested contractor does not exist.</p>
+                    <p:linkButton outcome="contractors" value="Back to list" icon="pi pi-arrow-left"/>
+                </p:card>
+
+                <ui:fragment rendered="#{not contractorFormBean.notFound}">
+
+                    <p:card id="companyCard">
+                        <f:facet name="title">
+                            #{contractorFormBean.editMode ? 'Edit contractor' : 'New contractor'} – company
+                        </f:facet>
+
+                        <div class="form-grid">
+                            <div class="field">
+                                <p:outputLabel for="companyName" value="Company name"/>
+                                <p:inputText id="companyName" value="#{contractorFormBean.contractor.companyName}"
+                                             required="true" maxlength="100"
+                                             requiredMessage="Company name is required"
+                                             validatorMessage="Max 100 characters">
+                                    <f:validateLength maximum="100"/>
+                                    <p:ajax event="blur" update="companyNameMsg"/>
+                                </p:inputText>
+                                <p:message id="companyNameMsg" for="companyName" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="legalName" value="Legal name"/>
+                                <p:inputText id="legalName" value="#{contractorFormBean.contractor.legalName}"
+                                             required="true" maxlength="150"
+                                             requiredMessage="Legal name is required"
+                                             validatorMessage="Max 150 characters">
+                                    <f:validateLength maximum="150"/>
+                                    <p:ajax event="blur" update="legalNameMsg"/>
+                                </p:inputText>
+                                <p:message id="legalNameMsg" for="legalName" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="fiscalCode" value="Fiscal code"/>
+                                <p:inputText id="fiscalCode" value="#{contractorFormBean.contractor.fiscalCode}"
+                                             required="true" maxlength="13"
+                                             requiredMessage="Fiscal code is required"
+                                             validatorMessage="2–13 letters or digits">
+                                    <f:validateRegex pattern="^[A-Za-z0-9]{2,13}$"/>
+                                    <p:ajax event="blur" update="fiscalCodeMsg"/>
+                                </p:inputText>
+                                <p:message id="fiscalCodeMsg" for="fiscalCode" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="owner" value="Owner"/>
+                                <p:selectOneMenu id="owner" value="#{contractorFormBean.ownerId}"
+                                                 required="true" requiredMessage="Owner is required"
+                                                 filter="true" filterMatchMode="contains">
+                                    <f:selectItem itemLabel="Select owner" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{contractorFormBean.owners}"/>
+                                    <p:ajax update="ownerMsg"/>
+                                </p:selectOneMenu>
+                                <p:message id="ownerMsg" for="owner" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="active" value="Active"/>
+                                <p:toggleSwitch id="active" value="#{contractorFormBean.contractor.active}"/>
+                            </div>
+                        </div>
+                    </p:card>
+
+                    <p:card id="bankCard">
+                        <f:facet name="title">Bank and contact</f:facet>
+
+                        <div class="form-grid">
+                            <div class="field">
+                                <p:outputLabel for="iban" value="IBAN"/>
+                                <p:inputText id="iban" value="#{contractorFormBean.contractor.iban}"
+                                             required="true" maxlength="34"
+                                             requiredMessage="IBAN is required"
+                                             validatorMessage="2 letters, 2 digits, then 11–30 letters or digits, no spaces">
+                                    <f:validateRegex pattern="^[A-Za-z]{2}\d{2}[A-Za-z0-9]{11,30}$"/>
+                                    <p:ajax event="blur" update="ibanMsg"/>
+                                </p:inputText>
+                                <p:message id="ibanMsg" for="iban" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="bankName" value="Bank name"/>
+                                <p:inputText id="bankName" value="#{contractorFormBean.contractor.bankName}"
+                                             required="true" maxlength="100"
+                                             requiredMessage="Bank name is required"
+                                             validatorMessage="Max 100 characters">
+                                    <f:validateLength maximum="100"/>
+                                    <p:ajax event="blur" update="bankNameMsg"/>
+                                </p:inputText>
+                                <p:message id="bankNameMsg" for="bankName" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="email" value="Email"/>
+                                <p:inputText id="email" value="#{contractorFormBean.contractor.email}"
+                                             maxlength="254" type="email"
+                                             validatorMessage="Enter a valid email address (max 254 characters)">
+                                    <f:validateLength maximum="254"/>
+                                    <f:validateRegex pattern="^([^@\s]+@[^@\s]+\.[^@\s]+)?$"/>
+                                    <p:ajax event="blur" update="emailMsg"/>
+                                </p:inputText>
+                                <p:message id="emailMsg" for="email" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="phoneNumber" value="Phone number"/>
+                                <p:inputText id="phoneNumber" value="#{contractorFormBean.contractor.phoneNumber}"
+                                             maxlength="16"
+                                             validatorMessage="7–15 digits, optional leading '+'">
+                                    <f:validateRegex pattern="^(\+?[0-9]{7,15})?$"/>
+                                    <p:ajax event="blur" update="phoneNumberMsg"/>
+                                </p:inputText>
+                                <p:message id="phoneNumberMsg" for="phoneNumber" display="text"/>
+                            </div>
+                        </div>
+                    </p:card>
+
+                    <p:card id="addressCard">
+                        <f:facet name="title">Legal address</f:facet>
+                        <div class="form-grid three">
+                            <div class="field">
+                                <p:outputLabel for="city" value="City"/>
+                                <p:inputText id="city" value="#{contractorFormBean.contractor.legalAddress.city}" maxlength="60"
+                                             validatorMessage="Max 60 characters">
+                                    <f:validateLength maximum="60"/>
+                                </p:inputText>
+                                <p:message id="cityMsg" for="city" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="district" value="District"/>
+                                <p:inputText id="district" value="#{contractorFormBean.contractor.legalAddress.district}" maxlength="60"
+                                             validatorMessage="Max 60 characters">
+                                    <f:validateLength maximum="60"/>
+                                </p:inputText>
+                                <p:message id="districtMsg" for="district" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="street" value="Street"/>
+                                <p:inputText id="street" value="#{contractorFormBean.contractor.legalAddress.street}" maxlength="100"
+                                             validatorMessage="Max 100 characters">
+                                    <f:validateLength maximum="100"/>
+                                </p:inputText>
+                                <p:message id="streetMsg" for="street" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="streetNumber" value="Number"/>
+                                <p:inputText id="streetNumber" value="#{contractorFormBean.contractor.legalAddress.streetNumber}" maxlength="10"
+                                             validatorMessage="Max 10 characters">
+                                    <f:validateLength maximum="10"/>
+                                </p:inputText>
+                                <p:message id="streetNumberMsg" for="streetNumber" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="block" value="Block"/>
+                                <p:inputText id="block" value="#{contractorFormBean.contractor.legalAddress.block}" maxlength="10"
+                                             validatorMessage="Max 10 characters">
+                                    <f:validateLength maximum="10"/>
+                                </p:inputText>
+                                <p:message id="blockMsg" for="block" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="floor" value="Floor"/>
+                                <p:inputText id="floor" value="#{contractorFormBean.contractor.legalAddress.floor}" maxlength="5"
+                                             validatorMessage="Max 5 characters">
+                                    <f:validateLength maximum="5"/>
+                                </p:inputText>
+                                <p:message id="floorMsg" for="floor" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="apartment" value="Apartment"/>
+                                <p:inputText id="apartment" value="#{contractorFormBean.contractor.legalAddress.apartment}" maxlength="10"
+                                             validatorMessage="Max 10 characters">
+                                    <f:validateLength maximum="10"/>
+                                </p:inputText>
+                                <p:message id="apartmentMsg" for="apartment" display="text"/>
+                            </div>
+                        </div>
+                    </p:card>
+
+                    <p:card rendered="#{not contractorFormBean.editMode}">
+                        <f:facet name="title">Operations</f:facet>
+                        <div class="actions">
+                            <p:commandButton value="Add" icon="pi pi-plus"
+                                             action="#{contractorFormBean.create}"
+                                             process="@this companyCard bankCard addressCard"
+                                             update="companyCard bankCard addressCard growl"/>
+                            <span class="spacer"></span>
+                            <p:linkButton outcome="contractors" value="Cancel" icon="pi pi-times"
+                                          styleClass="ui-button-secondary"/>
+                        </div>
+                    </p:card>
+
+                    <p:card rendered="#{contractorFormBean.editMode}">
+                        <f:facet name="title">Actions</f:facet>
+                        <div class="actions">
+                            <p:commandButton value="Update" icon="pi pi-save"
+                                             action="#{contractorFormBean.update}"
+                                             process="@this companyCard bankCard addressCard"
+                                             update="companyCard bankCard addressCard growl"/>
+
+                            <p:commandButton value="Delete" icon="pi pi-trash"
+                                             styleClass="ui-button-danger"
+                                             action="#{contractorFormBean.delete}"
+                                             process="@this" update="growl">
+                                <p:confirm header="Delete contractor"
+                                           message="Delete contractor '#{contractorFormBean.contractor.companyName}'? Its legal address is deleted too. This cannot be undone."
+                                           icon="pi pi-exclamation-triangle"/>
+                            </p:commandButton>
+
+                            <span class="spacer"></span>
+
+                            <p:linkButton outcome="contractors" value="Back to list" icon="pi pi-arrow-left"
+                                          styleClass="ui-button-secondary"/>
+                        </div>
+                    </p:card>
+
+                </ui:fragment>
+            </div>
+        </h:form>
+
+        <h:form id="confirmForm">
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true">
+                <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes ui-button-danger" icon="pi pi-check"/>
+                <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary" icon="pi pi-times"/>
+            </p:confirmDialog>
+        </h:form>
+    </ui:define>
+
+</ui:composition>

@@ -1,23 +1,34 @@
-package com.cedacri.internship.beans;
+package com.cedacri.internship.beans.contract.contractor;
 
-import com.cedacri.internship.dtos.BaseSearchDto;
-import com.cedacri.internship.edums.AdminUserRole;
+import com.cedacri.internship.dtos.contract.ContractorSearchDto;
+import com.cedacri.internship.entities.contract.Contractor;
+import com.cedacri.internship.services.contract.ContractorService;
+import jakarta.annotation.PostConstruct;
 import lombok.Getter;
+import org.springframework.context.annotation.Scope;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Component;
 
-public abstract class AbstractListBean<T extends BaseSearchDto> {
+@Component("contractorsBean")
+@Scope("view")
+public class ContractorBean {
+
+    private final ContractorService contractorService;
 
     @Getter
-    private T filter;
+    private ContractorSearchDto filter = new ContractorSearchDto();
+    @Getter
+    private Page<Contractor> result;
 
-    private Page<?> result;
+    public ContractorBean(ContractorService contractorService) {
+        this.contractorService = contractorService;
+    }
 
-    protected abstract void load();
-
-    protected abstract T getNewFilter();
-
-
+    @PostConstruct
+    private void init() {
+        load();
+    }
 
     public void search() {
         filter.setPage(0);
@@ -26,7 +37,7 @@ public abstract class AbstractListBean<T extends BaseSearchDto> {
 
     public void reset() {
         int size = filter.getSize();
-        filter = getNewFilter();
+        filter = new ContractorSearchDto();
         filter.setSize(size);
         load();
     }
@@ -65,7 +76,7 @@ public abstract class AbstractListBean<T extends BaseSearchDto> {
         return Math.max(0, result.getTotalPages() - 1);
     }
 
-    public AdminUserRole[] getRoles() {
-        return AdminUserRole.values();
+    private void load() {
+        result = contractorService.searchPage(filter);
     }
 }

@@ -1,0 +1,166 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:p="primefaces"
+                template="/templates/layout.xhtml">
+
+    <ui:define name="title">Admin - Contractors</ui:define>
+
+    <ui:define name="content">
+        <h:form id="contractorsForm">
+            <p:growl id="growl" showDetail="true" life="4000"/>
+
+            <div class="list-page">
+
+                <div class="page-head">
+                    <h2>Contractors</h2>
+                    <p:linkButton outcome="/contract/contractor-form" value="New contractor" icon="pi pi-plus"/>
+                </div>
+
+                <p:card>
+                    <f:facet name="title">Filter</f:facet>
+
+                    <div class="filter-grid">
+                        <div class="field">
+                            <p:outputLabel for="companyName" value="Company name"/>
+                            <p:inputText id="companyName" value="#{contractorsBean.filter.companyName}"/>
+                        </div>
+                        <div class="field">
+                            <p:outputLabel for="legalName" value="Legal name"/>
+                            <p:inputText id="legalName" value="#{contractorsBean.filter.legalName}"/>
+                        </div>
+                        <div class="field">
+                            <p:outputLabel for="fiscalCode" value="Fiscal code"/>
+                            <p:inputText id="fiscalCode" value="#{contractorsBean.filter.fiscalCode}"/>
+                        </div>
+                        <div class="field">
+                            <p:outputLabel for="active" value="Active"/>
+                            <p:selectOneMenu id="active" value="#{contractorsBean.filter.active}">
+                                <f:selectItem itemLabel="All" itemValue="#{null}" noSelectionOption="true"/>
+                                <f:selectItem itemLabel="Yes" itemValue="#{true}"/>
+                                <f:selectItem itemLabel="No" itemValue="#{false}"/>
+                            </p:selectOneMenu>
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <p:commandButton value="Search" icon="pi pi-search"
+                                         action="#{contractorsBean.search}"
+                                         process="@this companyName legalName fiscalCode active"
+                                         update="results"/>
+                        <p:commandButton value="Reset" icon="pi pi-times"
+                                         styleClass="ui-button-secondary"
+                                         action="#{contractorsBean.reset}"
+                                         process="@this"
+                                         update="@form"/>
+                    </div>
+                </p:card>
+
+                <p:outputPanel id="results">
+                    <p:card>
+                        <p:dataTable id="contractorsTable"
+                                     value="#{contractorsBean.result.content}" var="c"
+                                     emptyMessage="No contractors found">
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Company name" styleClass="ui-button-flat"
+                                                     icon="#{contractorsBean.sortIcon('companyName')}" iconPos="right"
+                                                     action="#{contractorsBean.sortBy('companyName')}"
+                                                     process="@this" update="contractorsForm:results"/>
+                                </f:facet>
+                                <p:link value="#{c.companyName}" outcome="/contract/contractor-form">
+                                    <f:param name="id" value="#{c.id}"/>
+                                </p:link>
+                            </p:column>
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Legal name" styleClass="ui-button-flat"
+                                                     icon="#{contractorsBean.sortIcon('legalName')}" iconPos="right"
+                                                     action="#{contractorsBean.sortBy('legalName')}"
+                                                     process="@this" update="contractorsForm:results"/>
+                                </f:facet>
+                                <h:outputText value="#{c.legalName}"/>
+                            </p:column>
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Fiscal code" styleClass="ui-button-flat"
+                                                     icon="#{contractorsBean.sortIcon('fiscalCode')}" iconPos="right"
+                                                     action="#{contractorsBean.sortBy('fiscalCode')}"
+                                                     process="@this" update="contractorsForm:results"/>
+                                </f:facet>
+                                <h:outputText value="#{c.fiscalCode}"/>
+                            </p:column>
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Owner" styleClass="ui-button-flat"
+                                                     icon="#{contractorsBean.sortIcon('owner.username')}" iconPos="right"
+                                                     action="#{contractorsBean.sortBy('owner.username')}"
+                                                     process="@this" update="contractorsForm:results"/>
+                                </f:facet>
+                                <h:outputText value="#{c.owner.username}"/>
+                            </p:column>
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Bank" styleClass="ui-button-flat"
+                                                     icon="#{contractorsBean.sortIcon('bankName')}" iconPos="right"
+                                                     action="#{contractorsBean.sortBy('bankName')}"
+                                                     process="@this" update="contractorsForm:results"/>
+                                </f:facet>
+                                <h:outputText value="#{c.bankName}"/>
+                            </p:column>
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Active" styleClass="ui-button-flat"
+                                                     icon="#{contractorsBean.sortIcon('active')}" iconPos="right"
+                                                     action="#{contractorsBean.sortBy('active')}"
+                                                     process="@this" update="contractorsForm:results"/>
+                                </f:facet>
+                                <p:tag value="#{c.active ? 'Active' : 'Inactive'}"
+                                       severity="#{c.active ? 'success' : 'danger'}"/>
+                            </p:column>
+                        </p:dataTable>
+
+                        <div class="actions">
+                            <h:outputText
+                                    value="Page #{contractorsBean.result.number + 1} of #{contractorsBean.lastPage + 1} (#{contractorsBean.result.totalElements} contractors)"/>
+                            <span class="spacer"></span>
+
+                            <p:commandButton icon="pi pi-angle-double-left" styleClass="ui-button-flat"
+                                             disabled="#{contractorsBean.result.first}"
+                                             action="#{contractorsBean.goToPage(0)}"
+                                             process="@this" update="contractorsForm:results"/>
+                            <p:commandButton icon="pi pi-angle-left" styleClass="ui-button-flat"
+                                             disabled="#{not contractorsBean.result.hasPrevious()}"
+                                             action="#{contractorsBean.goToPage(contractorsBean.result.number - 1)}"
+                                             process="@this" update="contractorsForm:results"/>
+                            <p:commandButton icon="pi pi-angle-right" styleClass="ui-button-flat"
+                                             disabled="#{not contractorsBean.result.hasNext()}"
+                                             action="#{contractorsBean.goToPage(contractorsBean.result.number + 1)}"
+                                             process="@this" update="contractorsForm:results"/>
+                            <p:commandButton icon="pi pi-angle-double-right" styleClass="ui-button-flat"
+                                             disabled="#{contractorsBean.result.last}"
+                                             action="#{contractorsBean.goToPage(contractorsBean.lastPage)}"
+                                             process="@this" update="contractorsForm:results"/>
+
+                            <p:selectOneMenu id="size" value="#{contractorsBean.filter.size}">
+                                <f:selectItem itemLabel="10" itemValue="#{10}"/>
+                                <f:selectItem itemLabel="20" itemValue="#{20}"/>
+                                <f:selectItem itemLabel="50" itemValue="#{50}"/>
+                                <p:ajax listener="#{contractorsBean.changeSize}" update="contractorsForm:results"/>
+                            </p:selectOneMenu>
+                        </div>
+                    </p:card>
+                </p:outputPanel>
+
+            </div>
+        </h:form>
+    </ui:define>
+
+</ui:composition>
