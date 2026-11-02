@@ -1,0 +1,138 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:p="primefaces"
+                template="/templates/layout.xhtml">
+
+    <ui:define name="title">
+        Admin - #{contractTemplateFormBean.editMode ? 'Edit contract template' : 'New contract template'}
+    </ui:define>
+
+    <ui:define name="content">
+        <h:form id="contractTemplateForm">
+
+            <p:growl id="growl" showDetail="true" life="4000"/>
+
+            <div class="user-page">
+
+                <p:card rendered="#{contractTemplateFormBean.notFound}">
+                    <f:facet name="title">Contract template not found</f:facet>
+                    <p>The requested contract template does not exist.</p>
+                    <p:linkButton outcome="contract-templates" value="Back to list" icon="pi pi-arrow-left"/>
+                </p:card>
+
+                <ui:fragment rendered="#{not contractTemplateFormBean.notFound}">
+
+                    <p:card id="contractTemplateCard">
+                        <f:facet name="title">
+                            #{contractTemplateFormBean.editMode ? 'Edit contract template' : 'New contract template'}
+                        </f:facet>
+
+                        <div class="form-grid">
+                            <div class="field">
+                                <p:outputLabel for="utility" value="Utility"/>
+                                <p:selectOneMenu id="utility" value="#{contractTemplateFormBean.utilityId}"
+                                                 required="true" requiredMessage="Utility is required"
+                                                 filter="true" filterMatchMode="contains">
+                                    <f:selectItem itemLabel="Select utility" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{contractTemplateFormBean.utilities}"/>
+                                    <p:ajax update="utilityMsg"/>
+                                </p:selectOneMenu>
+                                <p:message id="utilityMsg" for="utility" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="price" value="Price per unit"/>
+                                <p:inputNumber id="price" value="#{contractTemplateFormBean.contractTemplate.price}"
+                                               required="true" requiredMessage="Price is required"
+                                               decimalPlaces="2" minValue="0.01" maxValue="99999999.99"
+                                               validatorMessage="Price must be greater than zero">
+                                    <p:ajax event="blur" update="priceMsg"/>
+                                </p:inputNumber>
+                                <p:message id="priceMsg" for="price" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="paymentPlanType" value="Payment plan"/>
+                                <p:selectOneMenu id="paymentPlanType"
+                                                 value="#{contractTemplateFormBean.contractTemplate.paymentPlanType}"
+                                                 required="true" requiredMessage="Payment plan is required">
+                                    <f:selectItem itemLabel="Select payment plan" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{contractTemplateFormBean.paymentPlanTypes}" var="t"
+                                                   itemLabel="#{t}" itemValue="#{t}"/>
+                                    <p:ajax event="change" update="paymentPlanTypeMsg"/>
+                                </p:selectOneMenu>
+                                <p:message id="paymentPlanTypeMsg" for="paymentPlanType" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="durationInMonths" value="Duration (months)"/>
+                                <p:inputNumber id="durationInMonths"
+                                               value="#{contractTemplateFormBean.contractTemplate.durationInMonths}"
+                                               required="true" requiredMessage="Duration is required"
+                                               decimalPlaces="0" minValue="1" maxValue="120"
+                                               validatorMessage="Between 1 and 120 months">
+                                    <p:ajax event="blur" update="durationInMonthsMsg"/>
+                                </p:inputNumber>
+                                <p:message id="durationInMonthsMsg" for="durationInMonths" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="automaticRenewal" value="Automatic renewal"/>
+                                <p:toggleSwitch id="automaticRenewal"
+                                                value="#{contractTemplateFormBean.contractTemplate.automaticRenewal}"/>
+                            </div>
+                        </div>
+                    </p:card>
+
+                    <p:card rendered="#{not contractTemplateFormBean.editMode}">
+                        <f:facet name="title">Operations</f:facet>
+                        <div class="actions">
+                            <p:commandButton value="Add" icon="pi pi-plus"
+                                             action="#{contractTemplateFormBean.create}"
+                                             process="@this contractTemplateCard"
+                                             update="contractTemplateCard growl"/>
+                            <span class="spacer"></span>
+                            <p:linkButton outcome="contract-templates" value="Cancel" icon="pi pi-times"
+                                          styleClass="ui-button-secondary"/>
+                        </div>
+                    </p:card>
+
+                    <p:card rendered="#{contractTemplateFormBean.editMode}">
+                        <f:facet name="title">Actions</f:facet>
+                        <div class="actions">
+                            <p:commandButton value="Update" icon="pi pi-save"
+                                             action="#{contractTemplateFormBean.update}"
+                                             process="@this contractTemplateCard"
+                                             update="contractTemplateCard growl"/>
+
+                            <p:commandButton value="Delete" icon="pi pi-trash"
+                                             styleClass="ui-button-danger"
+                                             action="#{contractTemplateFormBean.delete}"
+                                             process="@this" update="growl">
+                                <p:confirm header="Delete contract template"
+                                           message="Delete contract template ##{contractTemplateFormBean.id}? This cannot be undone."
+                                           icon="pi pi-exclamation-triangle"/>
+                            </p:commandButton>
+
+                            <span class="spacer"></span>
+
+                            <p:linkButton outcome="contract-templates" value="Back to list" icon="pi pi-arrow-left"
+                                          styleClass="ui-button-secondary"/>
+                        </div>
+                    </p:card>
+
+                </ui:fragment>
+            </div>
+        </h:form>
+
+        <h:form id="confirmForm">
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true">
+                <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes ui-button-danger" icon="pi pi-check"/>
+                <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary" icon="pi pi-times"/>
+            </p:confirmDialog>
+        </h:form>
+    </ui:define>
+
+</ui:composition>

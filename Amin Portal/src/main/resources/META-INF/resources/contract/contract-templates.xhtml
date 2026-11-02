@@ -1,0 +1,178 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:p="primefaces"
+                template="/templates/layout.xhtml">
+
+    <ui:define name="title">Admin - Contract templates</ui:define>
+
+    <ui:define name="content">
+        <h:form id="contractTemplatesForm">
+            <p:growl id="growl" showDetail="true" life="4000"/>
+
+            <div class="list-page">
+
+                <div class="page-head">
+                    <h2>Contract templates</h2>
+                    <p:linkButton outcome="/contract/contract-template-form" value="New contract template" icon="pi pi-plus"/>
+                </div>
+
+                <p:card>
+                    <f:facet name="title">Filter</f:facet>
+
+                    <div class="filter-grid">
+                        <div class="field">
+                            <p:outputLabel for="paymentPlanType" value="Payment plan"/>
+                            <p:selectOneMenu id="paymentPlanType" value="#{contractTemplatesBean.filter.paymentPlanType}">
+                                <f:selectItem itemLabel="All" itemValue="#{null}" noSelectionOption="true"/>
+                                <f:selectItems value="#{contractTemplatesBean.paymentPlanTypes}" var="t" itemLabel="#{t}" itemValue="#{t}"/>
+                            </p:selectOneMenu>
+                        </div>
+                        <div class="field">
+                            <p:outputLabel for="automaticRenewal" value="Automatic renewal"/>
+                            <p:selectOneMenu id="automaticRenewal" value="#{contractTemplatesBean.filter.automaticRenewal}">
+                                <f:selectItem itemLabel="All" itemValue="#{null}" noSelectionOption="true"/>
+                                <f:selectItem itemLabel="Yes" itemValue="#{true}"/>
+                                <f:selectItem itemLabel="No" itemValue="#{false}"/>
+                            </p:selectOneMenu>
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <p:commandButton value="Search" icon="pi pi-search"
+                                         action="#{contractTemplatesBean.search}"
+                                         process="@this paymentPlanType automaticRenewal"
+                                         update="results"/>
+                        <p:commandButton value="Reset" icon="pi pi-times"
+                                         styleClass="ui-button-secondary"
+                                         action="#{contractTemplatesBean.reset}"
+                                         process="@this"
+                                         update="@form"/>
+                    </div>
+                </p:card>
+
+                <p:outputPanel id="results">
+                    <p:card>
+                        <p:dataTable id="contractTemplatesTable"
+                                     value="#{contractTemplatesBean.result.content}" var="t"
+                                     emptyMessage="No contract templates found">
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Id" styleClass="ui-button-flat"
+                                                     icon="#{contractTemplatesBean.sortIcon('id')}" iconPos="right"
+                                                     action="#{contractTemplatesBean.sortBy('id')}"
+                                                     process="@this" update="contractTemplatesForm:results"/>
+                                </f:facet>
+                                <p:link value="##{t.id}" outcome="/contract/contract-template-form">
+                                    <f:param name="id" value="#{t.id}"/>
+                                </p:link>
+                            </p:column>
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Contractor" styleClass="ui-button-flat"
+                                                     icon="#{contractTemplatesBean.sortIcon('contractor.companyName')}" iconPos="right"
+                                                     action="#{contractTemplatesBean.sortBy('contractor.companyName')}"
+                                                     process="@this" update="contractTemplatesForm:results"/>
+                                </f:facet>
+                                <p:link value="#{t.contractor.companyName}" outcome="/contract/contractor-form">
+                                    <f:param name="id" value="#{t.contractor.id}"/>
+                                </p:link>
+                            </p:column>
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Utility" styleClass="ui-button-flat"
+                                                     icon="#{contractTemplatesBean.sortIcon('utility.type')}" iconPos="right"
+                                                     action="#{contractTemplatesBean.sortBy('utility.type')}"
+                                                     process="@this" update="contractTemplatesForm:results"/>
+                                </f:facet>
+                                <p:link value="#{t.utility.type}" outcome="/utility/utility-form">
+                                    <f:param name="id" value="#{t.utility.id}"/>
+                                </p:link>
+                            </p:column>
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Price" styleClass="ui-button-flat"
+                                                     icon="#{contractTemplatesBean.sortIcon('price')}" iconPos="right"
+                                                     action="#{contractTemplatesBean.sortBy('price')}"
+                                                     process="@this" update="contractTemplatesForm:results"/>
+                                </f:facet>
+                                <h:outputText value="#{t.price}">
+                                    <f:convertNumber minFractionDigits="2" maxFractionDigits="2"/>
+                                </h:outputText>
+                                <h:outputText value=" / #{t.utility.unitOfMeasure}"/>
+                            </p:column>
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Payment plan" styleClass="ui-button-flat"
+                                                     icon="#{contractTemplatesBean.sortIcon('paymentPlanType')}" iconPos="right"
+                                                     action="#{contractTemplatesBean.sortBy('paymentPlanType')}"
+                                                     process="@this" update="contractTemplatesForm:results"/>
+                                </f:facet>
+                                <h:outputText value="#{t.paymentPlanType}"/>
+                            </p:column>
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Duration (months)" styleClass="ui-button-flat"
+                                                     icon="#{contractTemplatesBean.sortIcon('durationInMonths')}" iconPos="right"
+                                                     action="#{contractTemplatesBean.sortBy('durationInMonths')}"
+                                                     process="@this" update="contractTemplatesForm:results"/>
+                                </f:facet>
+                                <h:outputText value="#{t.durationInMonths}"/>
+                            </p:column>
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Auto renewal" styleClass="ui-button-flat"
+                                                     icon="#{contractTemplatesBean.sortIcon('automaticRenewal')}" iconPos="right"
+                                                     action="#{contractTemplatesBean.sortBy('automaticRenewal')}"
+                                                     process="@this" update="contractTemplatesForm:results"/>
+                                </f:facet>
+                                <p:tag value="#{t.automaticRenewal ? 'Yes' : 'No'}"
+                                       severity="#{t.automaticRenewal ? 'success' : 'secondary'}"/>
+                            </p:column>
+                        </p:dataTable>
+
+                        <div class="actions">
+                            <h:outputText
+                                    value="Page #{contractTemplatesBean.result.number + 1} of #{contractTemplatesBean.lastPage + 1} (#{contractTemplatesBean.result.totalElements} templates)"/>
+                            <span class="spacer"></span>
+
+                            <p:commandButton icon="pi pi-angle-double-left" styleClass="ui-button-flat"
+                                             disabled="#{contractTemplatesBean.result.first}"
+                                             action="#{contractTemplatesBean.goToPage(0)}"
+                                             process="@this" update="contractTemplatesForm:results"/>
+                            <p:commandButton icon="pi pi-angle-left" styleClass="ui-button-flat"
+                                             disabled="#{not contractTemplatesBean.result.hasPrevious()}"
+                                             action="#{contractTemplatesBean.goToPage(contractTemplatesBean.result.number - 1)}"
+                                             process="@this" update="contractTemplatesForm:results"/>
+                            <p:commandButton icon="pi pi-angle-right" styleClass="ui-button-flat"
+                                             disabled="#{not contractTemplatesBean.result.hasNext()}"
+                                             action="#{contractTemplatesBean.goToPage(contractTemplatesBean.result.number + 1)}"
+                                             process="@this" update="contractTemplatesForm:results"/>
+                            <p:commandButton icon="pi pi-angle-double-right" styleClass="ui-button-flat"
+                                             disabled="#{contractTemplatesBean.result.last}"
+                                             action="#{contractTemplatesBean.goToPage(contractTemplatesBean.lastPage)}"
+                                             process="@this" update="contractTemplatesForm:results"/>
+
+                            <p:selectOneMenu id="size" value="#{contractTemplatesBean.filter.size}">
+                                <f:selectItem itemLabel="10" itemValue="#{10}"/>
+                                <f:selectItem itemLabel="20" itemValue="#{20}"/>
+                                <f:selectItem itemLabel="50" itemValue="#{50}"/>
+                                <p:ajax listener="#{contractTemplatesBean.changeSize}" update="contractTemplatesForm:results"/>
+                            </p:selectOneMenu>
+                        </div>
+                    </p:card>
+                </p:outputPanel>
+
+            </div>
+        </h:form>
+    </ui:define>
+
+</ui:composition>

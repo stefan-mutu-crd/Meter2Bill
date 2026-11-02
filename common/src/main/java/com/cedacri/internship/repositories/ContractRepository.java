@@ -5,4 +5,5 @@ import com.cedacri.internship.repositories.specification.BaseRepository;
 
 public interface ContractRepository extends BaseRepository<Contract, Long> {
 
+    boolean existsByContractTemplateId(Long contractTemplateId);
 }
