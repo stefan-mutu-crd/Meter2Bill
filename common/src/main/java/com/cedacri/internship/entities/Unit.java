@@ -28,20 +28,20 @@ public class Unit extends AbstractAuditable implements Serializable {
     @Column(nullable = false, length = 20)
     private UnitType unitType;
 
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false)
     private String name;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Unit parent;
 
-    @OneToMany(fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY)
+    @Builder.Default
     private List<Unit> children = new ArrayList<>();
 
     @OneToOne
     private Address address;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     private CustomerUser tenant;
 
     @Enumerated(EnumType.STRING)

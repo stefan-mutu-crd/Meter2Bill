@@ -10,16 +10,17 @@ Base pkg: `com.cedacri.internship`.
 - `Amin Portal` (dir name typo, artifact `admin_portal`): JSF UI, security. Main: `AdminPortalApp`.
 
 ## common
-- `edums` (typo of enums): AdminUserRole, Gender, PaymentPlanType, TenantType, UnitOfMeasure, UnitType, UtilityType, `specification.Operation`(EQ,NOT_EQ,LIKE,GT,GTE,LT,LTE,IN,IS_NULL,IS_NOT_NULL).
+- `edums` (typo of enums): AdminUserRole, Gender, PaymentPlanType, TenantType, UnitOfMeasure, UnitType (incl. APARTMENT; flags streetNumber/block/floor/apartment = address fields used by the type), UtilityType, `specification.Operation`(EQ,NOT_EQ,LIKE,GT,GTE,LT,LTE,IN,IS_NULL,IS_NOT_NULL).
 - `entities`: all extend `AbstractAuditable`(creationDate,lastModifiedDate,@Version). Pattern: `@Getter @Setter @Builder`, protected no-args, private all-args, id IDENTITY `@Setter(NONE)`, equals by id, LAZY relations, enums STRING. No cascades.
   - `user`: `BaseUser`(@MappedSuperclass: username uq, password, enabled; not in builder → set via setters) ← AdminUser(fullName, role), CustomerUser(person 1:1). Person(firstName,lastName,socialId uq,dateOfBirth,gender,phone,email uq,address 1:1).
-  - Address, Unit(tree parent/children, tenant CustomerUser), CustomerUserUnit, Utility, Meter(@Table "utilities" bug?), `contract`: Contract, ContractTemplate, Contractor(owner CustomerUser, legalAddress 1:1, fiscalCode uq, active @Builder.Default), `finance`: Invoice, Payment.
+  - Address, Unit(name 255, tree parent/children `mappedBy=parent`, tenant CustomerUser optional, tenantType, address 1:1), Utility, Meter(@Table "utilities" bug?), `contract`: Contract, ContractTemplate, Contractor(owner CustomerUser, legalAddress 1:1, fiscalCode uq, active @Builder.Default), `finance`: Invoice, Payment.
 - `models.specification.SearchCriteria` record(field, operation, value).
-- `dtos`: search DTOs only: `BaseSearchDto`(page,size=20,sort="id",direction; `toCriteria()`, `toPageable()`) ← AdminUserSearchDto, CustomerUserSearchDto, `contract.ContractorSearchDto`, `contract.ContractTemplateSearchDto`(paymentPlanType, automaticRenewal EQ), `UtilitySearchDto`(type, unitOfMeasure EQ).
+- `dtos`: search DTOs only: `BaseSearchDto`(page,size=20,sort="id",direction; `toCriteria()`, `toPageable()`) ← AdminUserSearchDto, CustomerUserSearchDto, `contract.ContractorSearchDto`, `contract.ContractTemplateSearchDto`(paymentPlanType, automaticRenewal EQ), `UtilitySearchDto`(type, unitOfMeasure EQ), `UnitSearchDto`(name LIKE, unitType/tenantType/parent EQ, topLevel → parent IS_NULL).
 - `exceptions.BusinessException`: thrown by services for rule violations; beans catch and show message.
-- `repositories`: `BaseRepository<T,ID>` (Jpa+SpecExecutor; search/searchOptional/count by criteria). `SpecificationBuilder.allOf` skips null values; top-level fields only (no dotted paths). Address/Contractor/ContractTemplate/Contract/Utility repos.
+- `repositories`: `BaseRepository<T,ID>` (Jpa+SpecExecutor; search/searchOptional/count by criteria). `SpecificationBuilder.allOf` skips null values; top-level fields only (no dotted paths). Address/Contractor/ContractTemplate/Contract/Utility/Unit repos.
 - `services`: `Operations<T,ID>` iface; `BaseAbstractService<T,ID>` (readOnly tx; findById throws EntityNotFoundException, searchOne, search, searchPage, count, create, update(id, Consumer), update(id, incoming), delete). Per entity: `XService extends Operations` + `impl.XServiceImpl extends BaseAbstractService`. AdminUserService.findByUsername.
   - `UtilityService`/`impl.UtilityServiceImpl`: create(utility, contractorId)/update(id, changes, contractorId) resolve contractor, type unique per contractor; delete refuses if used by ContractTemplate.
+  - `UnitService`/`impl.UnitServiceImpl`: create(unit, parentId, tenantId)/update(id, changes, parentId, tenantId); keeps only address fields of the UnitType; blank name → generated from address (`City, Street No, bl. X, fl. Y, ap. Z`); name unique (case-insensitive) among siblings; parent cannot be self/descendant; tenantType required with tenant, cleared without; saves Address explicitly; delete refuses if has children or contracts, then deletes address. copyParentAddress (prefill child form), findChildren, findAncestors (breadcrumb), findParentCandidates (excludes self + descendants).
   - `contract.ContractTemplateService`: create(template, utilityId)/update(id, changes, utilityId) resolve utility and set contractor from utility.contractor; price > 0, duration > 0, plan required; inactive contractor refused on create/utility change; delete refuses if used by Contract.
   - `contract.ContractorService`: create(contractor, ownerId) saves Address explicitly then Contractor; update(id, changes, ownerId) copies fields onto managed entity; delete refuses if used by Utility/ContractTemplate, else deletes contractor then its address. Normalizes (trim, fiscalCode/IBAN uppercase no spaces, blank→null), checks fiscalCode unique, resolves owner.
 
@@ -31,9 +32,10 @@ Base pkg: `com.cedacri.internship`.
   - `user.customer_user`: CustomerUserBean(`customerUsersBean`), CustomerUserFormBean(same flow + person/address, blankToNull for uq cols).
   - `utility`: UtilityBean(`utilitiesBean`, list), UtilityFormBean(`utilityFormBean`, binds `utility` + `contractorId`, contractors SelectItems).
   - `contract.contract_template`: ContractTemplateBean(`contractTemplatesBean`, list), ContractTemplateFormBean(`contractTemplateFormBean`, binds `contractTemplate` + `utilityId`, utilities SelectItems "TYPE – Contractor").
+  - `unit`: UnitBean(`unitsBean`, list, `?parentId` preselects parent filter), UnitFormBean(`unitFormBean`, binds `unit` + `parentId` + `tenantId`; `?parentId` on add prefills parent + address; parent change on add copies parent address; ancestors, children).
   - `contract.contractor`: ContractorBean(`contractorsBean`, list), ContractorFormBean(`contractorFormBean`, binds `contractor` entity + `ownerId`, owners SelectItems; create/update/delete call service, catch BusinessException).
-- Views `src/main/resources/META-INF/resources`: `templates/layout.xhtml`(insert title, content), `components/header|footer.xhtml`, `css/app.css`, login.xhtml (plain HTML form), index.xhtml, `user/admin-users|admin-user-form|customer-users|customer-user-form.xhtml`, `contract/contractors|contractor-form|contract-templates|contract-template-form.xhtml`, `utility/utilities|utility-form.xhtml`. Extensionless URLs on. Header menu: Users, Contracts > Contractors, Contract templates, Utilities.
-- CSS classes (app.css): list-page, user-page, page-head, filter-grid, form-grid(.three,.wide), field, actions(.spacer).
+- Views `src/main/resources/META-INF/resources`: `templates/layout.xhtml`(insert title, content), `components/header|footer.xhtml`, `css/app.css`, login.xhtml (plain HTML form), index.xhtml, `user/admin-users|admin-user-form|customer-users|customer-user-form.xhtml`, `contract/contractors|contractor-form|contract-templates|contract-template-form.xhtml`, `utility/utilities|utility-form.xhtml`, `unit/units|unit-form.xhtml`. Extensionless URLs on. Header menu: Users, Contracts > Contractors, Contract templates, Utilities; Units.
+- CSS classes (app.css): list-page, user-page, page-head, filter-grid, form-grid(.three,.wide), field, actions(.spacer), unit-path (breadcrumb).
 
 ## Page patterns
 - List: page-head(h2 + New linkButton) → Filter card(filter-grid, Search/Reset) → `results` outputPanel: dataTable, header = flat commandButton sortBy+sortIcon, name p:link `?id`, enabled/active p:tag; pager bar (first/prev/next/last + size 10/20/50).
@@ -45,6 +47,8 @@ Base pkg: `com.cedacri.internship`.
 - CRUD + list(filter/sort/page): AdminUser, CustomerUser, Contractor, Utility, ContractTemplate.
 - `V2__seed_utilities.sql`: seed customer `utility_owner` (person+address, pwd `ChangeMe123!`), contractors Moldovagaz, Termoelectrica, Apa-Canal Chisinau, Premier Energy (each with legal address), and one Utility per UtilityType (ELECTRICITY→Premier Energy kWh; TAP/INDUSTRIAL_WATER→Apa-Canal m³; HOT_WATER→Termoelectrica m³; HEATING→Termoelectrica Gcal; GAS→Moldovagaz m³).
 
+- Unit CRUD + list (all units; filter name/type/tenant type/parent/top-level; sort incl. parent/tenant). Form: address fields by UnitType (ajax), name auto-generated if empty, breadcrumb to ancestors, Child units card (paginated) with Add child unit (`?parentId`) / Open in list. CustomerUserUnit removed (one tenant per Unit).
+- `V4__unit_hierarchy.sql`: unit.tenant_id nullable, name varchar(255), drop `unit_unit_type_check` (APARTMENT added), drop unused `unit_children` and `customer_user_unit`.
 - `V3__seed_contract_templates.sql`: 11 templates for the V2 utilities (per contractor: monthly auto-renew + longer non-renewing plan; Termoelectrica HOT_WATER monthly only). Prices are placeholders.
 
 ## Rules (required)
@@ -72,4 +76,7 @@ Base pkg: `com.cedacri.internship`.
 - Flyway runs before Hibernate `ddl-auto`, so seed migrations fail on an empty DB (tables not created yet) → move schema into Flyway.
 - ContractTemplate keeps both `contractor` and `utility` (contractor redundant, derived from utility); list has no utility/contractor filter (dotted criteria). Template prices are placeholders.
 - `mvn install` fails: boot plugin `repackage` runs on `common` (no main class) → configure plugin only in Admin Portal. Workaround `-Dspring-boot.repackage.skip=true` (needs `clean` after a failed run, jar left empty).
+- Unit parent/tenant dropdowns and list parent filter load all units/customers (no paging) → autoComplete when lists grow. Parent candidate check walks ancestors in memory.
+- Hibernate `ddl-auto=update` does not refresh enum check constraints → adding enum values needs a migration dropping/updating `<table>_<column>_check` (done for unit_type only).
+- `dump.sql` is stale (V1 checksum differs from current V1).
 - Typos: `edums` pkg, `Amin Portal` dir, artifact `metter_to_bill`.

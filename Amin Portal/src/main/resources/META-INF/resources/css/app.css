@@ -64,3 +64,4 @@ body {
 .actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
 * + .actions { margin-top: 1rem; }   /* space only when something comes before it */
 .actions .spacer { flex: 1; }
+.unit-path { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }

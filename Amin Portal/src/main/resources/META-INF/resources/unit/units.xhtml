@@ -1,0 +1,170 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:p="primefaces"
+                template="/templates/layout.xhtml">
+
+    <ui:define name="title">Admin - Units</ui:define>
+
+    <ui:define name="content">
+        <h:form id="unitsForm">
+            <p:growl id="growl" showDetail="true" life="4000"/>
+
+            <div class="list-page">
+
+                <div class="page-head">
+                    <h2>Units</h2>
+                    <p:linkButton outcome="/unit/unit-form" value="New unit" icon="pi pi-plus"/>
+                </div>
+
+                <p:card>
+                    <f:facet name="title">Filter</f:facet>
+
+                    <div class="filter-grid">
+                        <div class="field">
+                            <p:outputLabel for="name" value="Name"/>
+                            <p:inputText id="name" value="#{unitsBean.filter.name}"/>
+                        </div>
+                        <div class="field">
+                            <p:outputLabel for="unitType" value="Type"/>
+                            <p:selectOneMenu id="unitType" value="#{unitsBean.filter.unitType}">
+                                <f:selectItem itemLabel="All" itemValue="#{null}" noSelectionOption="true"/>
+                                <f:selectItems value="#{unitsBean.unitTypes}" var="t"
+                                               itemLabel="#{t}" itemValue="#{t}"/>
+                            </p:selectOneMenu>
+                        </div>
+                        <div class="field">
+                            <p:outputLabel for="tenantType" value="Tenant type"/>
+                            <p:selectOneMenu id="tenantType" value="#{unitsBean.filter.tenantType}">
+                                <f:selectItem itemLabel="All" itemValue="#{null}" noSelectionOption="true"/>
+                                <f:selectItems value="#{unitsBean.tenantTypes}" var="t"
+                                               itemLabel="#{t}" itemValue="#{t}"/>
+                            </p:selectOneMenu>
+                        </div>
+                        <div class="field">
+                            <p:outputLabel for="parent" value="Parent"/>
+                            <p:selectOneMenu id="parent" value="#{unitsBean.parentId}"
+                                             filter="true" filterMatchMode="contains">
+                                <f:selectItem itemLabel="All" itemValue="#{null}" noSelectionOption="true"/>
+                                <f:selectItems value="#{unitsBean.parents}"/>
+                            </p:selectOneMenu>
+                        </div>
+                        <div class="field">
+                            <p:outputLabel for="topLevel" value="Top-level only"/>
+                            <p:toggleSwitch id="topLevel" value="#{unitsBean.filter.topLevel}"/>
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <p:commandButton value="Search" icon="pi pi-search"
+                                         action="#{unitsBean.search}"
+                                         process="@this name unitType tenantType parent topLevel"
+                                         update="results"/>
+                        <p:commandButton value="Reset" icon="pi pi-times"
+                                         styleClass="ui-button-secondary"
+                                         action="#{unitsBean.reset}"
+                                         process="@this"
+                                         update="@form"/>
+                    </div>
+                </p:card>
+
+                <p:outputPanel id="results">
+                    <p:card>
+                        <p:dataTable id="unitsTable"
+                                     value="#{unitsBean.result.content}" var="u"
+                                     emptyMessage="No units found">
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Name" styleClass="ui-button-flat"
+                                                     icon="#{unitsBean.sortIcon('name')}" iconPos="right"
+                                                     action="#{unitsBean.sortBy('name')}"
+                                                     process="@this" update="unitsForm:results"/>
+                                </f:facet>
+                                <p:link value="#{u.name}" outcome="/unit/unit-form">
+                                    <f:param name="id" value="#{u.id}"/>
+                                </p:link>
+                            </p:column>
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Type" styleClass="ui-button-flat"
+                                                     icon="#{unitsBean.sortIcon('unitType')}" iconPos="right"
+                                                     action="#{unitsBean.sortBy('unitType')}"
+                                                     process="@this" update="unitsForm:results"/>
+                                </f:facet>
+                                <h:outputText value="#{u.unitType}"/>
+                            </p:column>
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Parent" styleClass="ui-button-flat"
+                                                     icon="#{unitsBean.sortIcon('parent.name')}" iconPos="right"
+                                                     action="#{unitsBean.sortBy('parent.name')}"
+                                                     process="@this" update="unitsForm:results"/>
+                                </f:facet>
+                                <p:link value="#{u.parent.name}" outcome="/unit/unit-form"
+                                        rendered="#{u.parent != null}">
+                                    <f:param name="id" value="#{u.parent.id}"/>
+                                </p:link>
+                            </p:column>
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Tenant" styleClass="ui-button-flat"
+                                                     icon="#{unitsBean.sortIcon('tenant.username')}" iconPos="right"
+                                                     action="#{unitsBean.sortBy('tenant.username')}"
+                                                     process="@this" update="unitsForm:results"/>
+                                </f:facet>
+                                <h:outputText value="#{u.tenant.username}"/>
+                            </p:column>
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Tenant type" styleClass="ui-button-flat"
+                                                     icon="#{unitsBean.sortIcon('tenantType')}" iconPos="right"
+                                                     action="#{unitsBean.sortBy('tenantType')}"
+                                                     process="@this" update="unitsForm:results"/>
+                                </f:facet>
+                                <h:outputText value="#{u.tenantType}"/>
+                            </p:column>
+                        </p:dataTable>
+
+                        <div class="actions">
+                            <h:outputText
+                                    value="Page #{unitsBean.result.number + 1} of #{unitsBean.lastPage + 1} (#{unitsBean.result.totalElements} units)"/>
+                            <span class="spacer"></span>
+
+                            <p:commandButton icon="pi pi-angle-double-left" styleClass="ui-button-flat"
+                                             disabled="#{unitsBean.result.first}"
+                                             action="#{unitsBean.goToPage(0)}"
+                                             process="@this" update="unitsForm:results"/>
+                            <p:commandButton icon="pi pi-angle-left" styleClass="ui-button-flat"
+                                             disabled="#{not unitsBean.result.hasPrevious()}"
+                                             action="#{unitsBean.goToPage(unitsBean.result.number - 1)}"
+                                             process="@this" update="unitsForm:results"/>
+                            <p:commandButton icon="pi pi-angle-right" styleClass="ui-button-flat"
+                                             disabled="#{not unitsBean.result.hasNext()}"
+                                             action="#{unitsBean.goToPage(unitsBean.result.number + 1)}"
+                                             process="@this" update="unitsForm:results"/>
+                            <p:commandButton icon="pi pi-angle-double-right" styleClass="ui-button-flat"
+                                             disabled="#{unitsBean.result.last}"
+                                             action="#{unitsBean.goToPage(unitsBean.lastPage)}"
+                                             process="@this" update="unitsForm:results"/>
+
+                            <p:selectOneMenu id="size" value="#{unitsBean.filter.size}">
+                                <f:selectItem itemLabel="10" itemValue="#{10}"/>
+                                <f:selectItem itemLabel="20" itemValue="#{20}"/>
+                                <f:selectItem itemLabel="50" itemValue="#{50}"/>
+                                <p:ajax listener="#{unitsBean.changeSize}" update="unitsForm:results"/>
+                            </p:selectOneMenu>
+                        </div>
+                    </p:card>
+                </p:outputPanel>
+
+            </div>
+        </h:form>
+    </ui:define>
+
+</ui:composition>

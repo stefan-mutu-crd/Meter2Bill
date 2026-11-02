@@ -1,0 +1,264 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:p="primefaces"
+                template="/templates/layout.xhtml">
+
+    <ui:define name="title">
+        Admin - #{unitFormBean.editMode ? 'Edit unit' : 'New unit'}
+    </ui:define>
+
+    <ui:define name="content">
+        <h:form id="unitForm">
+
+            <p:growl id="growl" showDetail="true" life="4000"/>
+
+            <div class="user-page">
+
+                <p:card rendered="#{unitFormBean.notFound}">
+                    <f:facet name="title">Unit not found</f:facet>
+                    <p>The requested unit does not exist.</p>
+                    <p:linkButton outcome="units" value="Back to list" icon="pi pi-arrow-left"/>
+                </p:card>
+
+                <ui:fragment rendered="#{not unitFormBean.notFound}">
+
+                    <p:outputPanel id="unitPath" styleClass="unit-path" rendered="#{unitFormBean.editMode}">
+                        <p:link value="Units" outcome="/unit/units"/>
+                        <ui:repeat value="#{unitFormBean.ancestors}" var="a">
+                            <i class="pi pi-angle-right"></i>
+                            <p:link value="#{a.name}" outcome="/unit/unit-form">
+                                <f:param name="id" value="#{a.id}"/>
+                            </p:link>
+                        </ui:repeat>
+                        <i class="pi pi-angle-right"></i>
+                        <strong>#{unitFormBean.unit.name}</strong>
+                    </p:outputPanel>
+
+                    <p:card id="unitCard">
+                        <f:facet name="title">
+                            #{unitFormBean.editMode ? 'Edit unit' : 'New unit'}
+                        </f:facet>
+
+                        <div class="form-grid">
+                            <div class="field">
+                                <p:outputLabel for="unitType" value="Type"/>
+                                <p:selectOneMenu id="unitType" value="#{unitFormBean.unit.unitType}"
+                                                 required="true" requiredMessage="Type is required">
+                                    <f:selectItem itemLabel="Select type" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{unitFormBean.unitTypes}" var="t"
+                                                   itemLabel="#{t}" itemValue="#{t}"/>
+                                    <p:ajax event="change" process="@this addressCard" update="unitTypeMsg addressCard"/>
+                                </p:selectOneMenu>
+                                <p:message id="unitTypeMsg" for="unitType" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="name" value="Name"/>
+                                <p:inputText id="name" value="#{unitFormBean.unit.name}"
+                                             required="#{unitFormBean.editMode}" maxlength="255"
+                                             placeholder="#{unitFormBean.editMode ? '' : 'Generated from address if empty'}"
+                                             requiredMessage="Name is required"
+                                             validatorMessage="Max 255 characters">
+                                    <f:validateLength maximum="255"/>
+                                    <p:ajax event="blur" update="nameMsg"/>
+                                </p:inputText>
+                                <p:message id="nameMsg" for="name" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="parent" value="Parent"/>
+                                <p:selectOneMenu id="parent" value="#{unitFormBean.parentId}"
+                                                 filter="true" filterMatchMode="contains">
+                                    <f:selectItem itemLabel="No parent" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{unitFormBean.parents}"/>
+                                    <p:ajax event="change" listener="#{unitFormBean.onParentChange}"
+                                            process="@this" update="parentMsg addressCard"/>
+                                </p:selectOneMenu>
+                                <p:message id="parentMsg" for="parent" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="tenant" value="Tenant"/>
+                                <p:selectOneMenu id="tenant" value="#{unitFormBean.tenantId}"
+                                                 filter="true" filterMatchMode="contains">
+                                    <f:selectItem itemLabel="No tenant" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{unitFormBean.tenants}"/>
+                                    <p:ajax event="change" update="tenantMsg"/>
+                                </p:selectOneMenu>
+                                <p:message id="tenantMsg" for="tenant" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="tenantType" value="Tenant type"/>
+                                <p:selectOneMenu id="tenantType" value="#{unitFormBean.unit.tenantType}">
+                                    <f:selectItem itemLabel="Select tenant type" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{unitFormBean.tenantTypes}" var="t"
+                                                   itemLabel="#{t}" itemValue="#{t}"/>
+                                </p:selectOneMenu>
+                                <p:message id="tenantTypeMsg" for="tenantType" display="text"/>
+                            </div>
+                        </div>
+                    </p:card>
+
+                    <p:card id="addressCard">
+                        <f:facet name="title">Address</f:facet>
+                        <div class="form-grid three">
+                            <div class="field">
+                                <p:outputLabel for="city" value="City"/>
+                                <p:inputText id="city" value="#{unitFormBean.unit.address.city}" maxlength="60"
+                                             validatorMessage="Max 60 characters">
+                                    <f:validateLength maximum="60"/>
+                                </p:inputText>
+                                <p:message id="cityMsg" for="city" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="district" value="District"/>
+                                <p:inputText id="district" value="#{unitFormBean.unit.address.district}" maxlength="60"
+                                             validatorMessage="Max 60 characters">
+                                    <f:validateLength maximum="60"/>
+                                </p:inputText>
+                                <p:message id="districtMsg" for="district" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="street" value="Street"/>
+                                <p:inputText id="street" value="#{unitFormBean.unit.address.street}" maxlength="100"
+                                             validatorMessage="Max 100 characters">
+                                    <f:validateLength maximum="100"/>
+                                </p:inputText>
+                                <p:message id="streetMsg" for="street" display="text"/>
+                            </div>
+
+                            <ui:fragment rendered="#{unitFormBean.unit.unitType.streetNumber}">
+                                <div class="field">
+                                    <p:outputLabel for="streetNumber" value="Number"/>
+                                    <p:inputText id="streetNumber" value="#{unitFormBean.unit.address.streetNumber}" maxlength="10"
+                                                 validatorMessage="Max 10 characters">
+                                        <f:validateLength maximum="10"/>
+                                    </p:inputText>
+                                    <p:message id="streetNumberMsg" for="streetNumber" display="text"/>
+                                </div>
+                            </ui:fragment>
+
+                            <ui:fragment rendered="#{unitFormBean.unit.unitType.block}">
+                                <div class="field">
+                                    <p:outputLabel for="block" value="Block"/>
+                                    <p:inputText id="block" value="#{unitFormBean.unit.address.block}" maxlength="10"
+                                                 validatorMessage="Max 10 characters">
+                                        <f:validateLength maximum="10"/>
+                                    </p:inputText>
+                                    <p:message id="blockMsg" for="block" display="text"/>
+                                </div>
+                            </ui:fragment>
+
+                            <ui:fragment rendered="#{unitFormBean.unit.unitType.floor}">
+                                <div class="field">
+                                    <p:outputLabel for="floor" value="Floor"/>
+                                    <p:inputText id="floor" value="#{unitFormBean.unit.address.floor}" maxlength="5"
+                                                 validatorMessage="Max 5 characters">
+                                        <f:validateLength maximum="5"/>
+                                    </p:inputText>
+                                    <p:message id="floorMsg" for="floor" display="text"/>
+                                </div>
+                            </ui:fragment>
+
+                            <ui:fragment rendered="#{unitFormBean.unit.unitType.apartment}">
+                                <div class="field">
+                                    <p:outputLabel for="apartment" value="#{unitFormBean.unit.unitType == 'OFFICE' ? 'Office no.' : 'Apartment'}"/>
+                                    <p:inputText id="apartment" value="#{unitFormBean.unit.address.apartment}" maxlength="10"
+                                                 validatorMessage="Max 10 characters">
+                                        <f:validateLength maximum="10"/>
+                                    </p:inputText>
+                                    <p:message id="apartmentMsg" for="apartment" display="text"/>
+                                </div>
+                            </ui:fragment>
+                        </div>
+                    </p:card>
+
+                    <p:card rendered="#{not unitFormBean.editMode}">
+                        <f:facet name="title">Operations</f:facet>
+                        <div class="actions">
+                            <p:commandButton value="Add" icon="pi pi-plus"
+                                             action="#{unitFormBean.create}"
+                                             process="@this unitCard addressCard"
+                                             update="unitCard addressCard growl"/>
+                            <span class="spacer"></span>
+                            <p:linkButton outcome="units" value="Cancel" icon="pi pi-times"
+                                          styleClass="ui-button-secondary"/>
+                        </div>
+                    </p:card>
+
+                    <p:card rendered="#{unitFormBean.editMode}">
+                        <f:facet name="title">Actions</f:facet>
+                        <div class="actions">
+                            <p:commandButton value="Update" icon="pi pi-save"
+                                             action="#{unitFormBean.update}"
+                                             process="@this unitCard addressCard"
+                                             update="unitPath unitCard addressCard childrenCard growl"/>
+
+                            <p:commandButton value="Delete" icon="pi pi-trash"
+                                             styleClass="ui-button-danger"
+                                             action="#{unitFormBean.delete}"
+                                             process="@this" update="growl">
+                                <p:confirm header="Delete unit"
+                                           message="Delete unit '#{unitFormBean.unit.name}'? Its address is deleted too. This cannot be undone."
+                                           icon="pi pi-exclamation-triangle"/>
+                            </p:commandButton>
+
+                            <span class="spacer"></span>
+
+                            <p:linkButton outcome="units" value="Back to list" icon="pi pi-arrow-left"
+                                          styleClass="ui-button-secondary"/>
+                        </div>
+                    </p:card>
+
+                    <p:card id="childrenCard" rendered="#{unitFormBean.editMode}">
+                        <f:facet name="title">Child units (#{unitFormBean.children.size()})</f:facet>
+
+                        <p:dataTable id="childrenTable" value="#{unitFormBean.children}" var="c"
+                                     paginator="true" rows="10" paginatorAlwaysVisible="false"
+                                     paginatorPosition="bottom"
+                                     emptyMessage="No child units">
+                            <p:column headerText="Name">
+                                <p:link value="#{c.name}" outcome="/unit/unit-form">
+                                    <f:param name="id" value="#{c.id}"/>
+                                </p:link>
+                            </p:column>
+                            <p:column headerText="Type">
+                                <h:outputText value="#{c.unitType}"/>
+                            </p:column>
+                            <p:column headerText="Tenant">
+                                <h:outputText value="#{c.tenant.username}"/>
+                            </p:column>
+                            <p:column headerText="Tenant type">
+                                <h:outputText value="#{c.tenantType}"/>
+                            </p:column>
+                        </p:dataTable>
+
+                        <div class="actions">
+                            <p:linkButton outcome="/unit/unit-form" value="Add child unit" icon="pi pi-plus">
+                                <f:param name="parentId" value="#{unitFormBean.id}"/>
+                            </p:linkButton>
+                            <p:linkButton outcome="/unit/units" value="Open in list" icon="pi pi-list"
+                                          styleClass="ui-button-secondary">
+                                <f:param name="parentId" value="#{unitFormBean.id}"/>
+                            </p:linkButton>
+                        </div>
+                    </p:card>
+
+                </ui:fragment>
+            </div>
+        </h:form>
+
+        <h:form id="confirmForm">
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true">
+                <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes ui-button-danger" icon="pi pi-check"/>
+                <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary" icon="pi pi-times"/>
+            </p:confirmDialog>
+        </h:form>
+    </ui:define>
+
+</ui:composition>
