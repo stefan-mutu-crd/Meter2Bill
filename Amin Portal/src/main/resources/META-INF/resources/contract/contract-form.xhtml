@@ -1,0 +1,167 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:p="primefaces"
+                template="/templates/layout.xhtml">
+
+    <ui:define name="title">
+        Admin - #{contractFormBean.editMode ? 'Edit contract' : 'New contract'}
+    </ui:define>
+
+    <ui:define name="content">
+        <h:form id="contractForm">
+
+            <p:growl id="growl" showDetail="true" life="4000"/>
+
+            <div class="user-page">
+
+                <p:card rendered="#{contractFormBean.notFound}">
+                    <f:facet name="title">Contract not found</f:facet>
+                    <p>The requested contract does not exist.</p>
+                    <p:linkButton outcome="contracts" value="Back to list" icon="pi pi-arrow-left"/>
+                </p:card>
+
+                <ui:fragment rendered="#{not contractFormBean.notFound}">
+
+                    <p:card id="contractCard">
+                        <f:facet name="title">
+                            #{contractFormBean.editMode ? 'Edit contract' : 'New contract'}
+                        </f:facet>
+
+                        <div class="form-grid">
+                            <ui:fragment rendered="#{not contractFormBean.editMode}">
+                                <div class="field">
+                                    <p:outputLabel for="unit" value="Unit"/>
+                                    <p:selectOneMenu id="unit" value="#{contractFormBean.unitId}"
+                                                     required="true" requiredMessage="Unit is required"
+                                                     filter="true" filterMatchMode="contains">
+                                        <f:selectItem itemLabel="Select unit" itemValue="#{null}" noSelectionOption="true"/>
+                                        <f:selectItems value="#{contractFormBean.units}"/>
+                                        <p:ajax update="unitMsg"/>
+                                    </p:selectOneMenu>
+                                    <p:message id="unitMsg" for="unit" display="text"/>
+                                </div>
+                            </ui:fragment>
+
+                            <ui:fragment rendered="#{contractFormBean.editMode}">
+                                <div class="field">
+                                    <label>Unit</label>
+                                    <p:link value="#{contractFormBean.contract.unit.name}" outcome="/unit/unit-form">
+                                        <f:param name="id" value="#{contractFormBean.unitId}"/>
+                                    </p:link>
+                                </div>
+                            </ui:fragment>
+
+                            <div class="field">
+                                <p:outputLabel for="contractTemplate" value="Contract template"/>
+                                <p:selectOneMenu id="contractTemplate" value="#{contractFormBean.contractTemplateId}"
+                                                 required="true" requiredMessage="Contract template is required"
+                                                 filter="true" filterMatchMode="contains">
+                                    <f:selectItem itemLabel="Select template" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{contractFormBean.contractTemplates}"/>
+                                    <p:ajax update="contractTemplateMsg"/>
+                                </p:selectOneMenu>
+                                <p:message id="contractTemplateMsg" for="contractTemplate" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="dateStart" value="Start date"/>
+                                <p:datePicker id="dateStart" value="#{contractFormBean.contract.dateStart}"
+                                              required="true" requiredMessage="Start date is required"
+                                              pattern="dd.MM.yyyy" showIcon="true">
+                                    <p:ajax event="dateSelect" update="dateStartMsg"/>
+                                </p:datePicker>
+                                <p:message id="dateStartMsg" for="dateStart" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="dateEnd" value="End date"/>
+                                <p:datePicker id="dateEnd" value="#{contractFormBean.contract.dateEnd}"
+                                              pattern="dd.MM.yyyy" showIcon="true" showButtonBar="true"
+                                              placeholder="Calculated from template duration if empty">
+                                    <p:ajax event="dateSelect" update="dateEndMsg"/>
+                                </p:datePicker>
+                                <p:message id="dateEndMsg" for="dateEnd" display="text"/>
+                            </div>
+                        </div>
+                    </p:card>
+
+                    <p:card id="detailsCard" rendered="#{contractFormBean.editMode}">
+                        <f:facet name="title">Details</f:facet>
+                        <div class="form-grid">
+                            <div class="field">
+                                <label>Customer</label>
+                                <p:link value="#{contractFormBean.contract.customer.username} – #{contractFormBean.contract.customer.person.firstName} #{contractFormBean.contract.customer.person.lastName}"
+                                        outcome="/user/customer-user-form">
+                                    <f:param name="id" value="#{contractFormBean.contract.customer.id}"/>
+                                </p:link>
+                            </div>
+                            <div class="field">
+                                <label>Price</label>
+                                <h:outputText value="#{contractFormBean.contract.contractTemplate.price} / #{contractFormBean.contract.contractTemplate.utility.unitOfMeasure}"/>
+                            </div>
+                            <div class="field">
+                                <label>Meter</label>
+                                <h:outputText value="#{contractFormBean.contract.meter.serialNumber} (#{contractFormBean.contract.meter.manufacturer}, #{contractFormBean.contract.meter.utilityType})"/>
+                            </div>
+                            <div class="field">
+                                <label>Meter tested until</label>
+                                <h:outputText value="#{contractFormBean.contract.meter.testedUntil}">
+                                    <f:convertDateTime type="localDate" pattern="dd.MM.yyyy"/>
+                                </h:outputText>
+                            </div>
+                        </div>
+                    </p:card>
+
+                    <p:card rendered="#{not contractFormBean.editMode}">
+                        <f:facet name="title">Operations</f:facet>
+                        <p>A free meter of the template's utility type is assigned automatically. The customer is the unit's tenant.</p>
+                        <div class="actions">
+                            <p:commandButton value="Add" icon="pi pi-plus"
+                                             action="#{contractFormBean.create}"
+                                             process="@this contractCard"
+                                             update="contractCard growl"/>
+                            <span class="spacer"></span>
+                            <p:linkButton outcome="contracts" value="Cancel" icon="pi pi-times"
+                                          styleClass="ui-button-secondary"/>
+                        </div>
+                    </p:card>
+
+                    <p:card rendered="#{contractFormBean.editMode}">
+                        <f:facet name="title">Actions</f:facet>
+                        <div class="actions">
+                            <p:commandButton value="Update" icon="pi pi-save"
+                                             action="#{contractFormBean.update}"
+                                             process="@this contractCard"
+                                             update="contractCard detailsCard growl"/>
+
+                            <p:commandButton value="Delete" icon="pi pi-trash"
+                                             styleClass="ui-button-danger"
+                                             action="#{contractFormBean.delete}"
+                                             process="@this" update="growl">
+                                <p:confirm header="Delete contract"
+                                           message="Delete contract ##{contractFormBean.id}? Its meter returns to the pool. This cannot be undone."
+                                           icon="pi pi-exclamation-triangle"/>
+                            </p:commandButton>
+
+                            <span class="spacer"></span>
+
+                            <p:linkButton outcome="contracts" value="Back to list" icon="pi pi-arrow-left"
+                                          styleClass="ui-button-secondary"/>
+                        </div>
+                    </p:card>
+
+                </ui:fragment>
+            </div>
+        </h:form>
+
+        <h:form id="confirmForm">
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true">
+                <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes ui-button-danger" icon="pi pi-check"/>
+                <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary" icon="pi pi-times"/>
+            </p:confirmDialog>
+        </h:form>
+    </ui:define>
+
+</ui:composition>

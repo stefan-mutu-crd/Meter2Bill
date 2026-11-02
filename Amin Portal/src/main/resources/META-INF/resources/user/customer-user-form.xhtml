@@ -322,7 +322,7 @@
                             <p:commandButton value="Delete" icon="pi pi-trash"
                                              styleClass="ui-button-danger"
                                              action="#{customerUserFormBean.delete}"
-                                             process="@this">
+                                             process="@this" update="growl">
                                 <p:confirm header="Delete customer"
                                            message="Delete customer '#{customerUserFormBean.username}'? Personal data and address are deleted too. This cannot be undone."
                                            icon="pi pi-exclamation-triangle"/>
@@ -332,6 +332,53 @@
 
                             <p:linkButton outcome="customer-users" value="Back to list" icon="pi pi-arrow-left"
                                           styleClass="ui-button-secondary"/>
+                        </div>
+                    </p:card>
+
+                    <p:card id="contractsCard" rendered="#{customerUserFormBean.editMode}">
+                        <f:facet name="title">Contracts (#{customerUserFormBean.contracts.size()})</f:facet>
+
+                        <p:dataTable id="contractsTable" value="#{customerUserFormBean.contracts}" var="c"
+                                     paginator="true" rows="10" paginatorAlwaysVisible="false"
+                                     paginatorPosition="bottom"
+                                     emptyMessage="No contracts">
+                            <p:column headerText="Id">
+                                <p:link value="##{c.id}" outcome="/contract/contract-form">
+                                    <f:param name="id" value="#{c.id}"/>
+                                </p:link>
+                            </p:column>
+                            <p:column headerText="Unit">
+                                <p:link value="#{c.unit.name}" outcome="/unit/unit-form">
+                                    <f:param name="id" value="#{c.unit.id}"/>
+                                </p:link>
+                            </p:column>
+                            <p:column headerText="Utility">
+                                <h:outputText value="#{c.contractTemplate.utility.type} – #{c.contractTemplate.contractor.companyName}"/>
+                            </p:column>
+                            <p:column headerText="Meter">
+                                <h:outputText value="#{c.meter.serialNumber}"/>
+                            </p:column>
+                            <p:column headerText="Start">
+                                <h:outputText value="#{c.dateStart}">
+                                    <f:convertDateTime type="localDate" pattern="dd.MM.yyyy"/>
+                                </h:outputText>
+                            </p:column>
+                            <p:column headerText="End">
+                                <h:outputText value="#{c.dateEnd}">
+                                    <f:convertDateTime type="localDate" pattern="dd.MM.yyyy"/>
+                                </h:outputText>
+                            </p:column>
+                            <p:column headerText="Status">
+                                <p:tag value="#{c.dateStart gt customerUserFormBean.today ? 'Upcoming' : (c.dateEnd lt customerUserFormBean.today ? 'Ended' : 'Active')}"
+                                       severity="#{c.dateStart gt customerUserFormBean.today ? 'info' : (c.dateEnd lt customerUserFormBean.today ? 'secondary' : 'success')}"/>
+                            </p:column>
+                        </p:dataTable>
+
+                        <div class="actions">
+                            <p:linkButton outcome="/contract/contracts" value="Open in list" icon="pi pi-list"
+                                          styleClass="ui-button-secondary">
+                                <f:param name="customerId" value="#{customerUserFormBean.id}"/>
+                            </p:linkButton>
                         </div>
                     </p:card>
 

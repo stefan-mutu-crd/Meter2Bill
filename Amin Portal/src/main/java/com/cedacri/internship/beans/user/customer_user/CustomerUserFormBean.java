@@ -2,8 +2,11 @@ package com.cedacri.internship.beans.user.customer_user;
 
 import com.cedacri.internship.edums.Gender;
 import com.cedacri.internship.entities.Address;
+import com.cedacri.internship.entities.contract.Contract;
 import com.cedacri.internship.entities.user.CustomerUser;
 import com.cedacri.internship.entities.user.Person;
+import com.cedacri.internship.exceptions.BusinessException;
+import com.cedacri.internship.services.contract.ContractService;
 import com.cedacri.internship.services.user.CustomerUserService;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
@@ -20,6 +23,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Objects;
 
 @Component("customerUserFormBean")
@@ -31,11 +35,14 @@ public class CustomerUserFormBean {
 
     private final CustomerUserService customerUserService;
     private final PasswordEncoder passwordEncoder;
+    private final ContractService contractService;
 
     @Getter
     private Long id;
     @Getter
     private boolean notFound;
+    @Getter
+    private List<Contract> contracts = List.of();
 
     // account
     @Getter @Setter
@@ -85,9 +92,11 @@ public class CustomerUserFormBean {
     @Getter @Setter
     private String confirmNewPassword;
 
-    public CustomerUserFormBean(CustomerUserService customerUserService, PasswordEncoder passwordEncoder) {
+    public CustomerUserFormBean(CustomerUserService customerUserService, PasswordEncoder passwordEncoder,
+                                ContractService contractService) {
         this.customerUserService = customerUserService;
         this.passwordEncoder = passwordEncoder;
+        this.contractService = contractService;
     }
 
     @PostConstruct
@@ -170,9 +179,15 @@ public class CustomerUserFormBean {
      * EDIT mode: called after the delete confirmation. Person and address are removed by cascade.
      */
     public String delete() {
-        customerUserService.delete(id);
-        flash("Customer deleted", "Customer '" + username + "' was deleted.");
-        return LIST_PAGE;
+        try {
+            customerUserService.delete(id);
+            flash("Customer deleted", "Customer '" + username + "' was deleted.");
+            return LIST_PAGE;
+        } catch (BusinessException e) {
+            error("Not deleted", e.getMessage());
+            FacesContext.getCurrentInstance().validationFailed();
+            return null;
+        }
     }
 
     /**
@@ -226,6 +241,8 @@ public class CustomerUserFormBean {
         block = a.getBlock();
         floor = a.getFloor();
         apartment = a.getApartment();
+
+        contracts = contractService.findByCustomer(id);
     }
 
     private void applyPerson(Person p) {

@@ -5,9 +5,11 @@ import com.cedacri.internship.edums.TenantType;
 import com.cedacri.internship.edums.UnitType;
 import com.cedacri.internship.entities.Address;
 import com.cedacri.internship.entities.Unit;
+import com.cedacri.internship.entities.contract.Contract;
 import com.cedacri.internship.entities.user.CustomerUser;
 import com.cedacri.internship.exceptions.BusinessException;
 import com.cedacri.internship.services.UnitService;
+import com.cedacri.internship.services.contract.ContractService;
 import com.cedacri.internship.services.user.CustomerUserService;
 import jakarta.annotation.PostConstruct;
 import jakarta.faces.application.FacesMessage;
@@ -19,6 +21,7 @@ import lombok.Setter;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -31,6 +34,7 @@ public class UnitFormBean {
 
     private final UnitService unitService;
     private final CustomerUserService customerUserService;
+    private final ContractService contractService;
 
     @Getter
     private Long id;
@@ -53,10 +57,13 @@ public class UnitFormBean {
     private List<Unit> ancestors = List.of();
     @Getter
     private List<Unit> children = List.of();
+    @Getter
+    private List<Contract> contracts = List.of();
 
-    public UnitFormBean(UnitService unitService, CustomerUserService customerUserService) {
+    public UnitFormBean(UnitService unitService, CustomerUserService customerUserService, ContractService contractService) {
         this.unitService = unitService;
         this.customerUserService = customerUserService;
+        this.contractService = contractService;
     }
 
     @PostConstruct
@@ -135,6 +142,10 @@ public class UnitFormBean {
         return TenantType.values();
     }
 
+    public LocalDate getToday() {
+        return LocalDate.now();
+    }
+
     private void preselectParent(String parentParam) {
         if (parentParam == null || !parentParam.matches("\\d+")) {
             return;
@@ -154,6 +165,7 @@ public class UnitFormBean {
         tenantId = unit.getTenant() == null ? null : unit.getTenant().getId();
         ancestors = unitService.findAncestors(id);
         children = unitService.findChildren(id);
+        contracts = contractService.findByUnit(id);
         loadParents();
     }
 

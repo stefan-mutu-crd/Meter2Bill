@@ -197,7 +197,7 @@
                             <p:commandButton value="Update" icon="pi pi-save"
                                              action="#{unitFormBean.update}"
                                              process="@this unitCard addressCard"
-                                             update="unitPath unitCard addressCard childrenCard growl"/>
+                                             update="unitPath unitCard addressCard childrenCard contractsCard growl"/>
 
                             <p:commandButton value="Delete" icon="pi pi-trash"
                                              styleClass="ui-button-danger"
@@ -245,6 +245,57 @@
                             <p:linkButton outcome="/unit/units" value="Open in list" icon="pi pi-list"
                                           styleClass="ui-button-secondary">
                                 <f:param name="parentId" value="#{unitFormBean.id}"/>
+                            </p:linkButton>
+                        </div>
+                    </p:card>
+
+                    <p:card id="contractsCard" rendered="#{unitFormBean.editMode}">
+                        <f:facet name="title">Contracts (#{unitFormBean.contracts.size()})</f:facet>
+
+                        <p:dataTable id="contractsTable" value="#{unitFormBean.contracts}" var="c"
+                                     paginator="true" rows="10" paginatorAlwaysVisible="false"
+                                     paginatorPosition="bottom"
+                                     emptyMessage="No contracts">
+                            <p:column headerText="Id">
+                                <p:link value="##{c.id}" outcome="/contract/contract-form">
+                                    <f:param name="id" value="#{c.id}"/>
+                                </p:link>
+                            </p:column>
+                            <p:column headerText="Customer">
+                                <p:link value="#{c.customer.username}" outcome="/user/customer-user-form">
+                                    <f:param name="id" value="#{c.customer.id}"/>
+                                </p:link>
+                            </p:column>
+                            <p:column headerText="Utility">
+                                <h:outputText value="#{c.contractTemplate.utility.type} – #{c.contractTemplate.contractor.companyName}"/>
+                            </p:column>
+                            <p:column headerText="Meter">
+                                <h:outputText value="#{c.meter.serialNumber}"/>
+                            </p:column>
+                            <p:column headerText="Start">
+                                <h:outputText value="#{c.dateStart}">
+                                    <f:convertDateTime type="localDate" pattern="dd.MM.yyyy"/>
+                                </h:outputText>
+                            </p:column>
+                            <p:column headerText="End">
+                                <h:outputText value="#{c.dateEnd}">
+                                    <f:convertDateTime type="localDate" pattern="dd.MM.yyyy"/>
+                                </h:outputText>
+                            </p:column>
+                            <p:column headerText="Status">
+                                <p:tag value="#{c.dateStart gt unitFormBean.today ? 'Upcoming' : (c.dateEnd lt unitFormBean.today ? 'Ended' : 'Active')}"
+                                       severity="#{c.dateStart gt unitFormBean.today ? 'info' : (c.dateEnd lt unitFormBean.today ? 'secondary' : 'success')}"/>
+                            </p:column>
+                        </p:dataTable>
+
+                        <div class="actions">
+                            <p:linkButton outcome="/contract/contract-form" value="New contract" icon="pi pi-plus"
+                                          disabled="#{unitFormBean.unit.tenant == null}">
+                                <f:param name="unitId" value="#{unitFormBean.id}"/>
+                            </p:linkButton>
+                            <p:linkButton outcome="/contract/contracts" value="Open in list" icon="pi pi-list"
+                                          styleClass="ui-button-secondary">
+                                <f:param name="unitId" value="#{unitFormBean.id}"/>
                             </p:linkButton>
                         </div>
                     </p:card>

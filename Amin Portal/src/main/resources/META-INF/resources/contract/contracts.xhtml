@@ -1,0 +1,200 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:p="primefaces"
+                template="/templates/layout.xhtml">
+
+    <ui:define name="title">Admin - Contracts</ui:define>
+
+    <ui:define name="content">
+        <h:form id="contractsForm">
+            <p:growl id="growl" showDetail="true" life="4000"/>
+
+            <div class="list-page">
+
+                <div class="page-head">
+                    <h2>Contracts</h2>
+                    <p:linkButton outcome="/contract/contract-form" value="New contract" icon="pi pi-plus"/>
+                </div>
+
+                <p:card>
+                    <f:facet name="title">Filter</f:facet>
+
+                    <div class="filter-grid">
+                        <div class="field">
+                            <p:outputLabel for="customer" value="Customer"/>
+                            <p:selectOneMenu id="customer" value="#{contractsBean.customerId}"
+                                             filter="true" filterMatchMode="contains">
+                                <f:selectItem itemLabel="All" itemValue="#{null}" noSelectionOption="true"/>
+                                <f:selectItems value="#{contractsBean.customers}"/>
+                            </p:selectOneMenu>
+                        </div>
+                        <div class="field">
+                            <p:outputLabel for="unit" value="Unit"/>
+                            <p:selectOneMenu id="unit" value="#{contractsBean.unitId}"
+                                             filter="true" filterMatchMode="contains">
+                                <f:selectItem itemLabel="All" itemValue="#{null}" noSelectionOption="true"/>
+                                <f:selectItems value="#{contractsBean.units}"/>
+                            </p:selectOneMenu>
+                        </div>
+                        <div class="field">
+                            <p:outputLabel for="contractTemplate" value="Template"/>
+                            <p:selectOneMenu id="contractTemplate" value="#{contractsBean.contractTemplateId}"
+                                             filter="true" filterMatchMode="contains">
+                                <f:selectItem itemLabel="All" itemValue="#{null}" noSelectionOption="true"/>
+                                <f:selectItems value="#{contractsBean.contractTemplates}"/>
+                            </p:selectOneMenu>
+                        </div>
+                        <div class="field">
+                            <p:outputLabel for="activeOn" value="Active on"/>
+                            <p:datePicker id="activeOn" value="#{contractsBean.filter.activeOn}"
+                                          pattern="dd.MM.yyyy" showIcon="true" showButtonBar="true"/>
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <p:commandButton value="Search" icon="pi pi-search"
+                                         action="#{contractsBean.search}"
+                                         process="@this customer unit contractTemplate activeOn"
+                                         update="results"/>
+                        <p:commandButton value="Reset" icon="pi pi-times"
+                                         styleClass="ui-button-secondary"
+                                         action="#{contractsBean.reset}"
+                                         process="@this"
+                                         update="@form"/>
+                    </div>
+                </p:card>
+
+                <p:outputPanel id="results">
+                    <p:card>
+                        <p:dataTable id="contractsTable"
+                                     value="#{contractsBean.result.content}" var="c"
+                                     emptyMessage="No contracts found">
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Id" styleClass="ui-button-flat"
+                                                     icon="#{contractsBean.sortIcon('id')}" iconPos="right"
+                                                     action="#{contractsBean.sortBy('id')}"
+                                                     process="@this" update="contractsForm:results"/>
+                                </f:facet>
+                                <p:link value="##{c.id}" outcome="/contract/contract-form">
+                                    <f:param name="id" value="#{c.id}"/>
+                                </p:link>
+                            </p:column>
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Customer" styleClass="ui-button-flat"
+                                                     icon="#{contractsBean.sortIcon('customer.username')}" iconPos="right"
+                                                     action="#{contractsBean.sortBy('customer.username')}"
+                                                     process="@this" update="contractsForm:results"/>
+                                </f:facet>
+                                <p:link value="#{c.customer.username}" outcome="/user/customer-user-form">
+                                    <f:param name="id" value="#{c.customer.id}"/>
+                                </p:link>
+                            </p:column>
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Unit" styleClass="ui-button-flat"
+                                                     icon="#{contractsBean.sortIcon('unit.name')}" iconPos="right"
+                                                     action="#{contractsBean.sortBy('unit.name')}"
+                                                     process="@this" update="contractsForm:results"/>
+                                </f:facet>
+                                <p:link value="#{c.unit.name}" outcome="/unit/unit-form">
+                                    <f:param name="id" value="#{c.unit.id}"/>
+                                </p:link>
+                            </p:column>
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Utility" styleClass="ui-button-flat"
+                                                     icon="#{contractsBean.sortIcon('contractTemplate.utility.type')}" iconPos="right"
+                                                     action="#{contractsBean.sortBy('contractTemplate.utility.type')}"
+                                                     process="@this" update="contractsForm:results"/>
+                                </f:facet>
+                                <p:link value="#{c.contractTemplate.utility.type} – #{c.contractTemplate.contractor.companyName}"
+                                        outcome="/contract/contract-template-form">
+                                    <f:param name="id" value="#{c.contractTemplate.id}"/>
+                                </p:link>
+                            </p:column>
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Meter" styleClass="ui-button-flat"
+                                                     icon="#{contractsBean.sortIcon('meter.serialNumber')}" iconPos="right"
+                                                     action="#{contractsBean.sortBy('meter.serialNumber')}"
+                                                     process="@this" update="contractsForm:results"/>
+                                </f:facet>
+                                <h:outputText value="#{c.meter.serialNumber}"/>
+                            </p:column>
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Start" styleClass="ui-button-flat"
+                                                     icon="#{contractsBean.sortIcon('dateStart')}" iconPos="right"
+                                                     action="#{contractsBean.sortBy('dateStart')}"
+                                                     process="@this" update="contractsForm:results"/>
+                                </f:facet>
+                                <h:outputText value="#{c.dateStart}">
+                                    <f:convertDateTime type="localDate" pattern="dd.MM.yyyy"/>
+                                </h:outputText>
+                            </p:column>
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="End" styleClass="ui-button-flat"
+                                                     icon="#{contractsBean.sortIcon('dateEnd')}" iconPos="right"
+                                                     action="#{contractsBean.sortBy('dateEnd')}"
+                                                     process="@this" update="contractsForm:results"/>
+                                </f:facet>
+                                <h:outputText value="#{c.dateEnd}">
+                                    <f:convertDateTime type="localDate" pattern="dd.MM.yyyy"/>
+                                </h:outputText>
+                            </p:column>
+
+                            <p:column headerText="Status">
+                                <p:tag value="#{c.dateStart gt contractsBean.today ? 'Upcoming' : (c.dateEnd lt contractsBean.today ? 'Ended' : 'Active')}"
+                                       severity="#{c.dateStart gt contractsBean.today ? 'info' : (c.dateEnd lt contractsBean.today ? 'secondary' : 'success')}"/>
+                            </p:column>
+                        </p:dataTable>
+
+                        <div class="actions">
+                            <h:outputText
+                                    value="Page #{contractsBean.result.number + 1} of #{contractsBean.lastPage + 1} (#{contractsBean.result.totalElements} contracts)"/>
+                            <span class="spacer"></span>
+
+                            <p:commandButton icon="pi pi-angle-double-left" styleClass="ui-button-flat"
+                                             disabled="#{contractsBean.result.first}"
+                                             action="#{contractsBean.goToPage(0)}"
+                                             process="@this" update="contractsForm:results"/>
+                            <p:commandButton icon="pi pi-angle-left" styleClass="ui-button-flat"
+                                             disabled="#{not contractsBean.result.hasPrevious()}"
+                                             action="#{contractsBean.goToPage(contractsBean.result.number - 1)}"
+                                             process="@this" update="contractsForm:results"/>
+                            <p:commandButton icon="pi pi-angle-right" styleClass="ui-button-flat"
+                                             disabled="#{not contractsBean.result.hasNext()}"
+                                             action="#{contractsBean.goToPage(contractsBean.result.number + 1)}"
+                                             process="@this" update="contractsForm:results"/>
+                            <p:commandButton icon="pi pi-angle-double-right" styleClass="ui-button-flat"
+                                             disabled="#{contractsBean.result.last}"
+                                             action="#{contractsBean.goToPage(contractsBean.lastPage)}"
+                                             process="@this" update="contractsForm:results"/>
+
+                            <p:selectOneMenu id="size" value="#{contractsBean.filter.size}">
+                                <f:selectItem itemLabel="10" itemValue="#{10}"/>
+                                <f:selectItem itemLabel="20" itemValue="#{20}"/>
+                                <f:selectItem itemLabel="50" itemValue="#{50}"/>
+                                <p:ajax listener="#{contractsBean.changeSize}" update="contractsForm:results"/>
+                            </p:selectOneMenu>
+                        </div>
+                    </p:card>
+                </p:outputPanel>
+
+            </div>
+        </h:form>
+    </ui:define>
+
+</ui:composition>
