@@ -1,0 +1,120 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:p="primefaces"
+                template="/templates/layout.xhtml">
+
+    <ui:define name="title">
+        Admin - #{utilityFormBean.editMode ? 'Edit utility' : 'New utility'}
+    </ui:define>
+
+    <ui:define name="content">
+        <h:form id="utilityForm">
+
+            <p:growl id="growl" showDetail="true" life="4000"/>
+
+            <div class="user-page">
+
+                <p:card rendered="#{utilityFormBean.notFound}">
+                    <f:facet name="title">Utility not found</f:facet>
+                    <p>The requested utility does not exist.</p>
+                    <p:linkButton outcome="utilities" value="Back to list" icon="pi pi-arrow-left"/>
+                </p:card>
+
+                <ui:fragment rendered="#{not utilityFormBean.notFound}">
+
+                    <p:card id="utilityCard">
+                        <f:facet name="title">
+                            #{utilityFormBean.editMode ? 'Edit utility' : 'New utility'}
+                        </f:facet>
+
+                        <div class="form-grid">
+                            <div class="field">
+                                <p:outputLabel for="type" value="Type"/>
+                                <p:selectOneMenu id="type" value="#{utilityFormBean.utility.type}"
+                                                 required="true" requiredMessage="Type is required">
+                                    <f:selectItem itemLabel="Select type" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{utilityFormBean.types}" var="t"
+                                                   itemLabel="#{t}" itemValue="#{t}"/>
+                                    <p:ajax event="change" update="typeMsg"/>
+                                </p:selectOneMenu>
+                                <p:message id="typeMsg" for="type" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="unitOfMeasure" value="Unit of measure"/>
+                                <p:selectOneMenu id="unitOfMeasure" value="#{utilityFormBean.utility.unitOfMeasure}"
+                                                 required="true" requiredMessage="Unit of measure is required">
+                                    <f:selectItem itemLabel="Select unit" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{utilityFormBean.units}" var="u"
+                                                   itemLabel="#{u}" itemValue="#{u}"/>
+                                    <p:ajax event="change" update="unitOfMeasureMsg"/>
+                                </p:selectOneMenu>
+                                <p:message id="unitOfMeasureMsg" for="unitOfMeasure" display="text"/>
+                            </div>
+
+                            <div class="field">
+                                <p:outputLabel for="contractor" value="Contractor"/>
+                                <p:selectOneMenu id="contractor" value="#{utilityFormBean.contractorId}"
+                                                 required="true" requiredMessage="Contractor is required"
+                                                 filter="true" filterMatchMode="contains">
+                                    <f:selectItem itemLabel="Select contractor" itemValue="#{null}" noSelectionOption="true"/>
+                                    <f:selectItems value="#{utilityFormBean.contractors}"/>
+                                    <p:ajax update="contractorMsg"/>
+                                </p:selectOneMenu>
+                                <p:message id="contractorMsg" for="contractor" display="text"/>
+                            </div>
+                        </div>
+                    </p:card>
+
+                    <p:card rendered="#{not utilityFormBean.editMode}">
+                        <f:facet name="title">Operations</f:facet>
+                        <div class="actions">
+                            <p:commandButton value="Add" icon="pi pi-plus"
+                                             action="#{utilityFormBean.create}"
+                                             process="@this utilityCard"
+                                             update="utilityCard growl"/>
+                            <span class="spacer"></span>
+                            <p:linkButton outcome="utilities" value="Cancel" icon="pi pi-times"
+                                          styleClass="ui-button-secondary"/>
+                        </div>
+                    </p:card>
+
+                    <p:card rendered="#{utilityFormBean.editMode}">
+                        <f:facet name="title">Actions</f:facet>
+                        <div class="actions">
+                            <p:commandButton value="Update" icon="pi pi-save"
+                                             action="#{utilityFormBean.update}"
+                                             process="@this utilityCard"
+                                             update="utilityCard growl"/>
+
+                            <p:commandButton value="Delete" icon="pi pi-trash"
+                                             styleClass="ui-button-danger"
+                                             action="#{utilityFormBean.delete}"
+                                             process="@this" update="growl">
+                                <p:confirm header="Delete utility"
+                                           message="Delete utility '#{utilityFormBean.utility.type}'? This cannot be undone."
+                                           icon="pi pi-exclamation-triangle"/>
+                            </p:commandButton>
+
+                            <span class="spacer"></span>
+
+                            <p:linkButton outcome="utilities" value="Back to list" icon="pi pi-arrow-left"
+                                          styleClass="ui-button-secondary"/>
+                        </div>
+                    </p:card>
+
+                </ui:fragment>
+            </div>
+        </h:form>
+
+        <h:form id="confirmForm">
+            <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" responsive="true">
+                <p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes ui-button-danger" icon="pi pi-check"/>
+                <p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary" icon="pi pi-times"/>
+            </p:confirmDialog>
+        </h:form>
+    </ui:define>
+
+</ui:composition>

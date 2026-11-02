@@ -8,4 +8,6 @@ import org.springframework.stereotype.Repository;
 public interface ContractTemplateRepository extends BaseRepository<ContractTemplate, Long> {
 
     boolean existsByContractorId(Long contractorId);
+
+    boolean existsByUtilityId(Long utilityId);
 }

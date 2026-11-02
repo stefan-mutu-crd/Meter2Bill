@@ -1,0 +1,142 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:ui="jakarta.faces.facelets"
+                xmlns:h="jakarta.faces.html"
+                xmlns:f="jakarta.faces.core"
+                xmlns:p="primefaces"
+                template="/templates/layout.xhtml">
+
+    <ui:define name="title">Admin - Utilities</ui:define>
+
+    <ui:define name="content">
+        <h:form id="utilitiesForm">
+            <p:growl id="growl" showDetail="true" life="4000"/>
+
+            <div class="list-page">
+
+                <div class="page-head">
+                    <h2>Utilities</h2>
+                    <p:linkButton outcome="/utility/utility-form" value="New utility" icon="pi pi-plus"/>
+                </div>
+
+                <p:card>
+                    <f:facet name="title">Filter</f:facet>
+
+                    <div class="filter-grid">
+                        <div class="field">
+                            <p:outputLabel for="type" value="Type"/>
+                            <p:selectOneMenu id="type" value="#{utilitiesBean.filter.type}">
+                                <f:selectItem itemLabel="All" itemValue="#{null}" noSelectionOption="true"/>
+                                <f:selectItems value="#{utilitiesBean.types}" var="t" itemLabel="#{t}" itemValue="#{t}"/>
+                            </p:selectOneMenu>
+                        </div>
+                        <div class="field">
+                            <p:outputLabel for="unitOfMeasure" value="Unit of measure"/>
+                            <p:selectOneMenu id="unitOfMeasure" value="#{utilitiesBean.filter.unitOfMeasure}">
+                                <f:selectItem itemLabel="All" itemValue="#{null}" noSelectionOption="true"/>
+                                <f:selectItems value="#{utilitiesBean.units}" var="u" itemLabel="#{u}" itemValue="#{u}"/>
+                            </p:selectOneMenu>
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <p:commandButton value="Search" icon="pi pi-search"
+                                         action="#{utilitiesBean.search}"
+                                         process="@this type unitOfMeasure"
+                                         update="results"/>
+                        <p:commandButton value="Reset" icon="pi pi-times"
+                                         styleClass="ui-button-secondary"
+                                         action="#{utilitiesBean.reset}"
+                                         process="@this"
+                                         update="@form"/>
+                    </div>
+                </p:card>
+
+                <p:outputPanel id="results">
+                    <p:card>
+                        <p:dataTable id="utilitiesTable"
+                                     value="#{utilitiesBean.result.content}" var="u"
+                                     emptyMessage="No utilities found">
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Type" styleClass="ui-button-flat"
+                                                     icon="#{utilitiesBean.sortIcon('type')}" iconPos="right"
+                                                     action="#{utilitiesBean.sortBy('type')}"
+                                                     process="@this" update="utilitiesForm:results"/>
+                                </f:facet>
+                                <p:link value="#{u.type}" outcome="/utility/utility-form">
+                                    <f:param name="id" value="#{u.id}"/>
+                                </p:link>
+                            </p:column>
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Unit of measure" styleClass="ui-button-flat"
+                                                     icon="#{utilitiesBean.sortIcon('unitOfMeasure')}" iconPos="right"
+                                                     action="#{utilitiesBean.sortBy('unitOfMeasure')}"
+                                                     process="@this" update="utilitiesForm:results"/>
+                                </f:facet>
+                                <h:outputText value="#{u.unitOfMeasure}"/>
+                            </p:column>
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Contractor" styleClass="ui-button-flat"
+                                                     icon="#{utilitiesBean.sortIcon('contractor.companyName')}" iconPos="right"
+                                                     action="#{utilitiesBean.sortBy('contractor.companyName')}"
+                                                     process="@this" update="utilitiesForm:results"/>
+                                </f:facet>
+                                <p:link value="#{u.contractor.companyName}" outcome="/contract/contractor-form">
+                                    <f:param name="id" value="#{u.contractor.id}"/>
+                                </p:link>
+                            </p:column>
+
+                            <p:column>
+                                <f:facet name="header">
+                                    <p:commandButton value="Contractor active" styleClass="ui-button-flat"
+                                                     icon="#{utilitiesBean.sortIcon('contractor.active')}" iconPos="right"
+                                                     action="#{utilitiesBean.sortBy('contractor.active')}"
+                                                     process="@this" update="utilitiesForm:results"/>
+                                </f:facet>
+                                <p:tag value="#{u.contractor.active ? 'Active' : 'Inactive'}"
+                                       severity="#{u.contractor.active ? 'success' : 'danger'}"/>
+                            </p:column>
+                        </p:dataTable>
+
+                        <div class="actions">
+                            <h:outputText
+                                    value="Page #{utilitiesBean.result.number + 1} of #{utilitiesBean.lastPage + 1} (#{utilitiesBean.result.totalElements} utilities)"/>
+                            <span class="spacer"></span>
+
+                            <p:commandButton icon="pi pi-angle-double-left" styleClass="ui-button-flat"
+                                             disabled="#{utilitiesBean.result.first}"
+                                             action="#{utilitiesBean.goToPage(0)}"
+                                             process="@this" update="utilitiesForm:results"/>
+                            <p:commandButton icon="pi pi-angle-left" styleClass="ui-button-flat"
+                                             disabled="#{not utilitiesBean.result.hasPrevious()}"
+                                             action="#{utilitiesBean.goToPage(utilitiesBean.result.number - 1)}"
+                                             process="@this" update="utilitiesForm:results"/>
+                            <p:commandButton icon="pi pi-angle-right" styleClass="ui-button-flat"
+                                             disabled="#{not utilitiesBean.result.hasNext()}"
+                                             action="#{utilitiesBean.goToPage(utilitiesBean.result.number + 1)}"
+                                             process="@this" update="utilitiesForm:results"/>
+                            <p:commandButton icon="pi pi-angle-double-right" styleClass="ui-button-flat"
+                                             disabled="#{utilitiesBean.result.last}"
+                                             action="#{utilitiesBean.goToPage(utilitiesBean.lastPage)}"
+                                             process="@this" update="utilitiesForm:results"/>
+
+                            <p:selectOneMenu id="size" value="#{utilitiesBean.filter.size}">
+                                <f:selectItem itemLabel="10" itemValue="#{10}"/>
+                                <f:selectItem itemLabel="20" itemValue="#{20}"/>
+                                <f:selectItem itemLabel="50" itemValue="#{50}"/>
+                                <p:ajax listener="#{utilitiesBean.changeSize}" update="utilitiesForm:results"/>
+                            </p:selectOneMenu>
+                        </div>
+                    </p:card>
+                </p:outputPanel>
+
+            </div>
+        </h:form>
+    </ui:define>
+
+</ui:composition>
