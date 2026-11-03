@@ -1,7 +1,7 @@
 # Meter2Bill Tracker
 
 ## Stack
-Java17, Spring Boot 4.1.1, Maven multi-module, Lombok, JPA/Postgres17 (docker-compose in `Amin Portal/`), Flyway, JoinFaces 6.1.1 + PrimeFaces (theme arya), Spring Security, RabbitMQ (spring-boot-starter-amqp, `rabbitmq:4-management` in docker-compose, AMQP 5672, UI 15672 guest/guest).
+Java17, Spring Boot 4.1.1, Maven multi-module, Lombok, JPA/Postgres17 (docker-compose in `Amin Portal/`), Flyway, JoinFaces 6.1.1 + PrimeFaces (theme arya), Spring Security, RabbitMQ (spring-boot-starter-amqp, `rabbitmq:4-management` in docker-compose, AMQP 5672, UI 15672 guest/guest), MongoDB (spring-boot-starter-data-mongodb in `common`, `mongo:8` in docker-compose, 27017, root/admin, auth DB admin, db `meter_to_bill`; Boot 4 props `spring.mongodb.*`). Jackson 3 (`tools.jackson`).
 Schema: Hibernate `ddl-auto=update`. Flyway = seed data only (`V1__init_schema.sql` admin users, pwd `ChangeMe123!`). `dump.sql` UTF-16, not a migration.
 Base pkg: `com.cedacri.internship`.
 
@@ -14,15 +14,18 @@ Base pkg: `com.cedacri.internship`.
 - `entities`: all extend `AbstractAuditable`(creationDate,lastModifiedDate,@Version). Pattern: `@Getter @Setter @Builder`, protected no-args, private all-args, id IDENTITY `@Setter(NONE)`, equals by id, LAZY relations, enums STRING. No cascades.
   - `user`: `BaseUser`(@MappedSuperclass: username uq, password, enabled; not in builder → set via setters) ← AdminUser(fullName, role), CustomerUser(person 1:1). Person(firstName,lastName,socialId uq,dateOfBirth,gender,phone,email uq,address 1:1).
   - Address, Unit(name 255, tree parent/children `mappedBy=parent`, tenant CustomerUser optional, tenantType, address 1:1), Utility, Meter(utilityType, manufacturer, serialNumber, secretKey uq, testedUntil; table `meter`), `contract`: Contract(unit, customer, contractTemplate, meter uq, dateStart, dateEnd), ContractTemplate, Contractor(owner CustomerUser, legalAddress 1:1, fiscalCode uq, active @Builder.Default), `finance`: Invoice, Payment.
+- `documents.MeterReading` (Mongo `meter_readings`): id String, serialNumber, utilityType, value (DECIMAL128), readAt, receivedAt (@CreatedDate). Same Lombok pattern as entities.
+- `configs.MongoConfig`: `@EnableMongoAuditing`, `@EnableMongoRepositories` limited to `repositories.mongo`.
 - `models.specification.SearchCriteria` record(field, operation, value).
 - `dtos`: search DTOs only: `BaseSearchDto`(page,size=20,sort="id",direction; `toCriteria()`, `toPageable()`) ← AdminUserSearchDto, CustomerUserSearchDto, `contract.ContractorSearchDto`, `contract.ContractTemplateSearchDto`(paymentPlanType, automaticRenewal EQ), `UtilitySearchDto`(type, unitOfMeasure EQ), `UnitSearchDto`(name LIKE, unitType/tenantType/parent EQ, topLevel → parent IS_NULL), `contract.ContractSearchDto`(customer/unit/contractTemplate EQ, activeOn → dateStart LTE + dateEnd GTE).
 - `exceptions.BusinessException`: thrown by services for rule violations; beans catch and show message.
-- `repositories`: `BaseRepository<T,ID>` (Jpa+SpecExecutor; search/searchOptional/count by criteria). `SpecificationBuilder.allOf` skips null values; top-level fields only (no dotted paths). Address/Contractor/ContractTemplate/Contract/Utility/Unit/Meter/Invoice repos. `MeterRepository.findFree(type, validUntil, page)` = meters of type tested until date and not used by any Contract. `ContractRepository.existsOverlapping`, findByCustomer/UnitId (EntityGraph).
+- `repositories`: `BaseRepository<T,ID>` (Jpa+SpecExecutor; search/searchOptional/count by criteria). `SpecificationBuilder.allOf` skips null values; top-level fields only (no dotted paths). Address/Contractor/ContractTemplate/Contract/Utility/Unit/Meter/Invoice repos. `mongo.MeterReadingRepository` (MongoRepository). `MeterRepository.findFree(type, validUntil, page)` = meters of type tested until date and not used by any Contract. `ContractRepository.existsOverlapping`, findByCustomer/UnitId (EntityGraph).
 - `services`: `Operations<T,ID>` iface; `BaseAbstractService<T,ID>` (readOnly tx; findById throws EntityNotFoundException, searchOne, search, searchPage, count, create, update(id, Consumer), update(id, incoming), delete). Per entity: `XService extends Operations` + `impl.XServiceImpl extends BaseAbstractService`. AdminUserService.findByUsername.
   - `UtilityService`/`impl.UtilityServiceImpl`: create(utility, contractorId)/update(id, changes, contractorId) resolve contractor, type unique per contractor; delete refuses if used by ContractTemplate.
   - `UnitService`/`impl.UnitServiceImpl`: create(unit, parentId, tenantId)/update(id, changes, parentId, tenantId); keeps only address fields of the UnitType; blank name → generated from address (`City, Street No, bl. X, fl. Y, ap. Z`); name unique (case-insensitive) among siblings; parent cannot be self/descendant; tenantType required with tenant, cleared without; saves Address explicitly; delete refuses if has children or contracts, then deletes address. copyParentAddress (prefill child form), findChildren, findAncestors (breadcrumb), findParentCandidates (excludes self + descendants).
   - `contract.ContractTemplateService`: create(template, utilityId)/update(id, changes, utilityId) resolve utility and set contractor from utility.contractor; price > 0, duration > 0, plan required; inactive contractor refused on create/utility change; delete refuses if used by Contract.
   - `contract.ContractService`/`impl.contract.ContractServiceImpl`: create(contract, unitId, templateId): unit must have tenant → customer = tenant; contractor active; dateEnd empty → dateStart + duration months - 1 day; no overlapping contract for same unit + utility type; takes first free meter from pool (type = template utility type, testedUntil ≥ dateEnd). update(id, changes, templateId): unit/customer/meter fixed; template change must keep utility type; same date/overlap/meter-tested checks. delete refuses if invoices; meter returns to pool. findByCustomer, findByUnit.
+  - `MeterReadingService` (single class, no iface): save(json payload) parses JSON via JsonMapper into MeterReading and stores it (secretKey ignored, not stored).
   - CustomerUserServiceImpl.delete refuses if customer has contracts.
   - `contract.ContractorService`: create(contractor, ownerId) saves Address explicitly then Contractor; update(id, changes, ownerId) copies fields onto managed entity; delete refuses if used by Utility/ContractTemplate, else deletes contractor then its address. Normalizes (trim, fiscalCode/IBAN uppercase no spaces, blank→null), checks fiscalCode unique, resolves owner.
 
@@ -30,11 +33,12 @@ Base pkg: `com.cedacri.internship`.
 - Service tests only, `src/test/java/.../services/**/*ServiceImplTest`: `@SpringBootTest` on H2 in-memory (`src/test/resources/application.properties`: create-drop, Flyway off). `TestApp` = test boot config (+ `@EnableJpaAuditing`).
 - `TestData` (@Component): `cleanDb()` truncates all tables (call in `@BeforeEach`); no-arg factories `adminUser/address/customer/contractor/inactiveContractor/utility/template/unit/rentedUnit/meter/contract`, overloads with minimal params (`utility(type, contractor)`, `template(utility)`, `unit(parent)`, `meter(type, testedUntil)`, `contract(unit, template)`, `invoice(contract)`). Saves via EntityManager, unique values by counter.
 - Tests are not transactional → assert lazy relations by id only, or reload via repository.
+- `MeterReadingServiceTest`: Testcontainers `mongo:8` + `@ServiceConnection` (needs Docker). H2 test contexts also create a Mongo client → harmless `Connection refused` log noise.
 - Coverage: JaCoCo (parent pom), `mvn -pl common test` → `common/target/site/jacoco/index.html`.
 
 ## Admin Portal (JSF)
 - `configs.SecurityConfig`: form login `/login.xhtml` → POST `/login`, success `/index.xhtml`, logout `/logout`, csrf off, BCrypt, UserDetailsService on AdminUser (role → ROLE_x). Public: login, faces resources.
-- `configs.RabbitConfig`: durable queue `meter.readings` (`METER_READINGS_QUEUE`). `messaging.MeterReadingListener`: `@RabbitListener` on it, only logs the body (UTF-8). Meters publish directly to RabbitMQ (no REST wrapper).
+- `configs.RabbitConfig`: durable queue `meter.readings` (`METER_READINGS_QUEUE`). `messaging.MeterReadingListener`: `@RabbitListener` on it, logs the body and calls `MeterReadingService.save`. `default-requeue-rejected=false` → failed messages dropped, not requeued. Meters publish directly to RabbitMQ (no REST wrapper).
 - `beans`: Spring `@Component("name")` + `@Scope("view")`, ctor injection, `@PostConstruct init`. Each bean standalone (no base classes).
   - LoginBean(@RequestScope, viewAction messages for ?error/denied/logout), HomeBean.
   - `user.admin_user`: AdminUserBean(`adminUsersBean`, list), AdminUserFormBean(add/edit by `?id`, create→redirect form, update, changePassword, delete, validatePasswordMatch).
@@ -66,9 +70,10 @@ Base pkg: `com.cedacri.internship`.
 - Service unit tests (63) for all service impls + base service, H2 + `TestData`, JaCoCo coverage (services ~93% instructions). Fixed `ContractorServiceImpl.delete` leaving the legal address (lazy proxy → Spring Data `delete` treated it as new and skipped it; now unproxied).
 
 - RabbitMQ integration (minimal): queue `meter.readings` + listener that logs incoming meter readings.
+- MongoDB integration (minimal): meter readings from `meter.readings` stored in Mongo `meter_readings`. Message JSON: `{"serialNumber","secretKey","utilityType","value","readAt"}`. Testcontainers test (2).
 
 ## Rules (required)
-- Clean code, NO comments/javadoc/section dividers.
+- Clean code, NO comments/javadoc/section dividers. Exception (requested): comment on `default-requeue-rejected` in application.properties.
 - Business logic in service layer only (validation rules, uniqueness, normalization, lookups, delete guards). Beans only bind, call services, show messages.
 - CRUD binds entities directly in beans/views. No form/CRUD DTOs (DTOs only for search).
 - No cascade rules on entities (to be decided later). Services save/delete related entities explicitly.
@@ -101,5 +106,5 @@ Base pkg: `com.cedacri.internship`.
 - `dump.sql` is stale (V1 checksum differs from current V1).
 - JPA auditing not enabled in the app (no `@EnableJpaAuditing`) → `creationDate/lastModifiedDate` not set; in tests inserts failed on NOT NULL `creation_date` until enabled in `TestApp` (verify in app, likely needs `@EnableJpaAuditing` on `AdminPortalApp`). Same lazy-proxy `delete` pitfall may hit other `repository.delete(lazyRef)` calls.
 - Not covered by tests: `BaseAbstractService.searchOne/search/update(id, incoming)` (`update(id, incoming)` copies null `version`/audit fields via BeanUtils).
-- RabbitMQ: readings only logged (no format, parsing, persistence, validation of meter `secretKey`); no DLQ/retry, no auth per meter; listener not verified end-to-end yet (local DB conflict blocked app start).
+- RabbitMQ/Mongo: no validation of readings (meter serial/secretKey vs Postgres, required fields, utility type match); failed messages dropped (no DLQ/retry); no auth per meter; flow not verified end-to-end in the running app (local Postgres conflict blocks app start). No indexes on `meter_readings` (serialNumber/readAt), no link to Meter id.
 - Typos: `edums` pkg, `Amin Portal` dir, artifact `metter_to_bill`.

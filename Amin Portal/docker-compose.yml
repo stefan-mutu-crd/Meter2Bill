@@ -25,5 +25,18 @@ services:
       - "5672:5672"
       - "15672:15672"
 
+  mongo:
+    image: mongo:8
+    container_name: mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: admin
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+
 volumes:
   pgdata:
+  mongodata:
