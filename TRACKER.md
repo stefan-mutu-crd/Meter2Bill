@@ -8,6 +8,7 @@ Base pkg: `com.cedacri.internship`.
 ## Modules
 - `common` (jar): domain + data + services.
 - `Amin Portal` (dir name typo, artifact `admin_portal`): JSF UI, security. Main: `AdminPortalApp`.
+- `meter-simulator` (artifact `meter_simulator`): standalone Spring Boot CLI simulating meters → RabbitMQ on a simulated clock. Own tracker: `meter-simulator/TRACKER.md` (keep it updated for simulator tasks).
 
 ## common
 - `edums` (typo of enums): AdminUserRole, Gender, PaymentPlanType, TenantType, UnitOfMeasure, UnitType (incl. APARTMENT; flags streetNumber/block/floor/apartment = address fields used by the type), UtilityType, `specification.Operation`(EQ,NOT_EQ,LIKE,GT,GTE,LT,LTE,IN,IS_NULL,IS_NOT_NULL).
@@ -72,6 +73,8 @@ Base pkg: `com.cedacri.internship`.
 - RabbitMQ integration (minimal): queue `meter.readings` + listener that logs incoming meter readings.
 - MongoDB integration (minimal): meter readings from `meter.readings` stored in Mongo `meter_readings`. Message JSON: `{"serialNumber","secretKey","utilityType","value","readAt"}`. Testcontainers test (2).
 
+- Meter simulator module (see `meter-simulator/TRACKER.md`). `V6__seed_simulation_data.sql`: 5 buildings × 20 apartments, 100 customers `customer_001..100` (OWNER), 500 contracts (5 utilities per apartment, MONTHLY templates, 2026-01-01 → 2028-12-31), 500 new meters (serials `-00051..-00150`).
+
 ## Rules (required)
 - Clean code, NO comments/javadoc/section dividers. Exception (requested): comment on `default-requeue-rejected` in application.properties.
 - Business logic in service layer only (validation rules, uniqueness, normalization, lookups, delete guards). Beans only bind, call services, show messages.
@@ -107,4 +110,5 @@ Base pkg: `com.cedacri.internship`.
 - JPA auditing not enabled in the app (no `@EnableJpaAuditing`) → `creationDate/lastModifiedDate` not set; in tests inserts failed on NOT NULL `creation_date` until enabled in `TestApp` (verify in app, likely needs `@EnableJpaAuditing` on `AdminPortalApp`). Same lazy-proxy `delete` pitfall may hit other `repository.delete(lazyRef)` calls.
 - Not covered by tests: `BaseAbstractService.searchOne/search/update(id, incoming)` (`update(id, incoming)` copies null `version`/audit fields via BeanUtils).
 - RabbitMQ/Mongo: no validation of readings (meter serial/secretKey vs Postgres, required fields, utility type match); failed messages dropped (no DLQ/retry); no auth per meter; flow not verified end-to-end in the running app (local Postgres conflict blocks app start). No indexes on `meter_readings` (serialNumber/readAt), no link to Meter id.
+- `MeterReadingListener` handles ~1k msg/s (one insert + INFO log per message) → backs up under the simulator at high speed factors (1 sim year ≈ 4.4M readings).
 - Typos: `edums` pkg, `Amin Portal` dir, artifact `metter_to_bill`.
