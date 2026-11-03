@@ -1,7 +1,7 @@
 # Meter2Bill Tracker
 
 ## Stack
-Java17, Spring Boot 4.1.1, Maven multi-module, Lombok, JPA/Postgres17 (docker-compose in `Amin Portal/`), Flyway, JoinFaces 6.1.1 + PrimeFaces (theme arya), Spring Security.
+Java17, Spring Boot 4.1.1, Maven multi-module, Lombok, JPA/Postgres17 (docker-compose in `Amin Portal/`), Flyway, JoinFaces 6.1.1 + PrimeFaces (theme arya), Spring Security, RabbitMQ (spring-boot-starter-amqp, `rabbitmq:4-management` in docker-compose, AMQP 5672, UI 15672 guest/guest).
 Schema: Hibernate `ddl-auto=update`. Flyway = seed data only (`V1__init_schema.sql` admin users, pwd `ChangeMe123!`). `dump.sql` UTF-16, not a migration.
 Base pkg: `com.cedacri.internship`.
 
@@ -34,6 +34,7 @@ Base pkg: `com.cedacri.internship`.
 
 ## Admin Portal (JSF)
 - `configs.SecurityConfig`: form login `/login.xhtml` → POST `/login`, success `/index.xhtml`, logout `/logout`, csrf off, BCrypt, UserDetailsService on AdminUser (role → ROLE_x). Public: login, faces resources.
+- `configs.RabbitConfig`: durable queue `meter.readings` (`METER_READINGS_QUEUE`). `messaging.MeterReadingListener`: `@RabbitListener` on it, only logs the body (UTF-8). Meters publish directly to RabbitMQ (no REST wrapper).
 - `beans`: Spring `@Component("name")` + `@Scope("view")`, ctor injection, `@PostConstruct init`. Each bean standalone (no base classes).
   - LoginBean(@RequestScope, viewAction messages for ?error/denied/logout), HomeBean.
   - `user.admin_user`: AdminUserBean(`adminUsersBean`, list), AdminUserFormBean(add/edit by `?id`, create→redirect form, update, changePassword, delete, validatePasswordMatch).
@@ -63,6 +64,8 @@ Base pkg: `com.cedacri.internship`.
 - `V3__seed_contract_templates.sql`: 11 templates for the V2 utilities (per contractor: monthly auto-renew + longer non-renewing plan; Termoelectrica HOT_WATER monthly only). Prices are placeholders.
 
 - Service unit tests (63) for all service impls + base service, H2 + `TestData`, JaCoCo coverage (services ~93% instructions). Fixed `ContractorServiceImpl.delete` leaving the legal address (lazy proxy → Spring Data `delete` treated it as new and skipped it; now unproxied).
+
+- RabbitMQ integration (minimal): queue `meter.readings` + listener that logs incoming meter readings.
 
 ## Rules (required)
 - Clean code, NO comments/javadoc/section dividers.
@@ -98,4 +101,5 @@ Base pkg: `com.cedacri.internship`.
 - `dump.sql` is stale (V1 checksum differs from current V1).
 - JPA auditing not enabled in the app (no `@EnableJpaAuditing`) → `creationDate/lastModifiedDate` not set; in tests inserts failed on NOT NULL `creation_date` until enabled in `TestApp` (verify in app, likely needs `@EnableJpaAuditing` on `AdminPortalApp`). Same lazy-proxy `delete` pitfall may hit other `repository.delete(lazyRef)` calls.
 - Not covered by tests: `BaseAbstractService.searchOne/search/update(id, incoming)` (`update(id, incoming)` copies null `version`/audit fields via BeanUtils).
+- RabbitMQ: readings only logged (no format, parsing, persistence, validation of meter `secretKey`); no DLQ/retry, no auth per meter; listener not verified end-to-end yet (local DB conflict blocked app start).
 - Typos: `edums` pkg, `Amin Portal` dir, artifact `metter_to_bill`.
