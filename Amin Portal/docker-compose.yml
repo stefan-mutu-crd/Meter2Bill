@@ -14,6 +14,18 @@ services:
       # optional: SQL scripts run on first start
       # - ./db/init:/docker-entrypoint-initdb.d
 
+  # Web UI for Postgres -> http://localhost:8081
+  adminer:
+    image: adminer
+    container_name: adminer
+    restart: unless-stopped
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    ports:
+      - "8081:8080"
+    depends_on:
+      - postgres
+
   rabbitmq:
     image: rabbitmq:4-management
     container_name: rabbitmq
@@ -23,7 +35,7 @@ services:
       RABBITMQ_DEFAULT_PASS: guest
     ports:
       - "5672:5672"
-      - "15672:15672"
+      - "15672:15672"   # Management UI -> http://localhost:15672
 
   mongo:
     image: mongo:8
@@ -36,6 +48,19 @@ services:
       - "27017:27017"
     volumes:
       - mongodata:/data/db
+
+  # Web UI for MongoDB -> http://localhost:8082
+  mongo-express:
+    image: mongo-express
+    container_name: mongo-express
+    restart: unless-stopped
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://root:admin@mongo:27017/
+      ME_CONFIG_BASICAUTH: "false"
+    ports:
+      - "8082:8081"
+    depends_on:
+      - mongo
 
 volumes:
   pgdata:

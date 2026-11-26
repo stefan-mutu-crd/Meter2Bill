@@ -27,13 +27,7 @@ body {
 .page-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .page-head h2 { margin: 0; }
 
-/* ---------- grids ---------- */
-.filter-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 1rem 1.5rem;
-}
-
+/* ---------- form grids (equal columns) ---------- */
 .form-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -56,9 +50,52 @@ body {
 .field .ui-password,
 .field .ui-password input,
 .field .ui-calendar,
-.field .ui-calendar input { width: 100%; box-sizing: border-box; }
+.field .ui-calendar input,
+.field .ui-datepicker { width: 100%; box-sizing: border-box; }
+
+/* PrimeFaces sets an inline min-width on selectOneMenu – keep it inside its field */
+.form-grid .ui-selectonemenu { min-width: 0 !important; }
+.ui-selectonemenu-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 
 .field .ui-message { margin: 0; padding: 0; min-height: 1.1rem; }
+
+/* ---------- filter bar: natural widths, fixed gap, wraps to next row ---------- */
+.filter-grid {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 1rem 1.5rem;           /* row gap | column gap – always respected */
+}
+
+.filter-grid .field {
+    flex: 0 0 auto;             /* don't stretch, don't shrink */
+    min-width: 200px;
+    max-width: 100%;
+}
+
+/* size widgets by content instead of 100% of the field (must come after .field rules) */
+.filter-grid .field .ui-inputfield,
+.filter-grid .field .ui-selectonemenu,
+.filter-grid .field .ui-calendar,
+.filter-grid .field .ui-calendar input,
+.filter-grid .field .ui-datepicker {
+    width: auto;
+    min-width: 200px;
+    max-width: 100%;
+}
+
+@media (max-width: 640px) {
+    .filter-grid .field { flex: 1 1 100%; }
+    .filter-grid .field .ui-inputfield,
+    .filter-grid .field .ui-selectonemenu,
+    .filter-grid .field .ui-calendar,
+    .filter-grid .field .ui-calendar input,
+    .filter-grid .field .ui-datepicker { width: 100%; }
+}
 
 /* ---------- button rows ---------- */
 .actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
