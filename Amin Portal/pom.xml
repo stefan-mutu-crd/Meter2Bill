@@ -19,13 +19,12 @@
 
     <dependencyManagement>
         <dependencies>
-            <!-- Source: https://mvnrepository.com/artifact/org.joinfaces/joinfaces-platform -->
             <dependency>
                 <groupId>org.joinfaces</groupId>
                 <artifactId>joinfaces-platform</artifactId>
-                <version>6.1.1</version>
+                <version>5.5.15</version>
                 <type>pom</type>
-                <scope>compile</scope>
+                <scope>import</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -40,19 +39,13 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-amqp</artifactId>
         </dependency>
-        <!-- Source: https://mvnrepository.com/artifact/org.joinfaces/primefaces-spring-boot-starter -->
         <dependency>
             <groupId>org.joinfaces</groupId>
             <artifactId>primefaces-spring-boot-starter</artifactId>
-            <version>6.1.1</version>
-            <scope>compile</scope>
         </dependency>
-        <!-- Source: https://mvnrepository.com/artifact/org.joinfaces/security-spring-boot-starter -->
         <dependency>
             <groupId>org.joinfaces</groupId>
             <artifactId>security-spring-boot-starter</artifactId>
-            <version>6.1.1</version>
-            <scope>compile</scope>
         </dependency>
         <!-- Source: https://mvnrepository.com/artifact/org.primefaces/primefaces-themes -->
         <dependency>
@@ -74,13 +67,12 @@
             <version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-flyway</artifactId>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-database-postgresql
-            </artifactId>   <!-- match your DB: flyway-mysql, flyway-sqlserver, ... -->
+            <artifactId>flyway-database-postgresql</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -89,4 +81,34 @@
             <optional>true</optional>
         </dependency>
     </dependencies>
+
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.13</version>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

@@ -3,15 +3,17 @@ package com.cedacri.internship.services;
 import com.cedacri.internship.documents.MeterReading;
 import com.cedacri.internship.edums.UtilityType;
 import com.cedacri.internship.repositories.mongo.MeterReadingRepository;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.junit.Ignore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.mongodb.MongoDBContainer;
-import tools.jackson.core.JacksonException;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -39,7 +41,7 @@ class MeterReadingServiceTest {
     }
 
     @Test
-    void saveStoresReadingFromJson() {
+    void saveStoresReadingFromJson() throws JsonProcessingException {
         String payload = """
                 {"serialNumber":"EL-00001","secretKey":"secret","utilityType":"ELECTRICITY",
                  "value":1234.56,"readAt":"2026-11-03T10:00:00Z"}
@@ -57,7 +59,7 @@ class MeterReadingServiceTest {
 
     @Test
     void saveRejectsInvalidJson() {
-        assertThatThrownBy(() -> meterReadingService.save("not json")).isInstanceOf(JacksonException.class);
+        assertThatThrownBy(() -> meterReadingService.save("not json")).isInstanceOf(JsonParseException.class);
         assertThat(meterReadingRepository.count()).isZero();
     }
 }

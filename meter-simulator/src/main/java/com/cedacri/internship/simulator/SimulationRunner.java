@@ -1,5 +1,6 @@
 package com.cedacri.internship.simulator;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
@@ -23,7 +24,7 @@ public class SimulationRunner implements ApplicationRunner {
     private final MeterReadingPublisher publisher;
 
     @Override
-    public void run(ApplicationArguments args) throws InterruptedException {
+    public void run(ApplicationArguments args) throws InterruptedException, JsonProcessingException {
         Instant end = properties.endInstant();
         Duration tickLength = properties.simulatedTickLength();
         Instant windowStart = properties.startInstant();
@@ -50,7 +51,7 @@ public class SimulationRunner implements ApplicationRunner {
         log.info("Simulation finished at {}", localTime(end));
     }
 
-    private int publish(List<SimulatedContract> contracts, Instant readAt) {
+    private int publish(List<SimulatedContract> contracts, Instant readAt) throws JsonProcessingException {
         LocalDate day = properties.dateOf(readAt);
         int sent = 0;
         for (SimulatedContract contract : contracts) {
