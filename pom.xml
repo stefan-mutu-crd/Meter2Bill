@@ -17,6 +17,7 @@
         <module>Amin Portal</module>
         <module>common</module>
         <module>meter-simulator</module>
+        <module>Public Portal</module>
     </modules>
 
     <properties>
