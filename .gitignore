@@ -37,3 +37,10 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+# Vaadin / frontend
+**/node_modules/
+**/src/main/frontend/generated/
+**/src/main/frontend/index.html
+**/vite.generated.ts
+**/src/main/bundles/
